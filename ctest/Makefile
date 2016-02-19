@@ -37,9 +37,9 @@ ztestl3o = c_zblas3.o c_z3chke.o auxiliary.o c_xerbla.o constant.o
 
 ztestl3o_3m = c_zblas3_3m.o c_z3chke_3m.o auxiliary.o c_xerbla.o constant.o
 
-
-
-all :: all1 all2 all3
+QEMU_RUN=/projects/cps-sw/ashwin/ashwin_sdk/blas/qemu-static/run.sh
+#all :: all1 all2 all3
+all :: all2
 
 all1: xscblat1 xdcblat1 xccblat1 xzcblat1
 ifeq ($(USE_OPENMP), 1)
@@ -48,10 +48,10 @@ ifeq ($(USE_OPENMP), 1)
 	OMP_NUM_THREADS=2 ./xccblat1
 	OMP_NUM_THREADS=2 ./xzcblat1
 else
-	OPENBLAS_NUM_THREADS=2 ./xscblat1
-	OPENBLAS_NUM_THREADS=2 ./xdcblat1
-	OPENBLAS_NUM_THREADS=2 ./xccblat1
-	OPENBLAS_NUM_THREADS=2 ./xzcblat1
+	$(QEMU_RUN) ./xscblat1
+	$(QEMU_RUN) ./xdcblat1
+	$(QEMU_RUN) ./xccblat1
+	$(QEMU_RUN) ./xzcblat1
 endif
 
 all2: xscblat2 xdcblat2 xccblat2 xzcblat2
@@ -61,10 +61,10 @@ ifeq ($(USE_OPENMP), 1)
 	OMP_NUM_THREADS=2 ./xccblat2 < cin2
 	OMP_NUM_THREADS=2 ./xzcblat2 < zin2
 else
-	OPENBLAS_NUM_THREADS=2 ./xscblat2 < sin2
-	OPENBLAS_NUM_THREADS=2 ./xdcblat2 < din2
-	OPENBLAS_NUM_THREADS=2 ./xccblat2 < cin2
-	OPENBLAS_NUM_THREADS=2 ./xzcblat2 < zin2
+	$(QEMU_RUN) ./xscblat2 < sin2
+	$(QEMU_RUN) ./xdcblat2 < din2
+	$(QEMU_RUN) ./xccblat2 < cin2
+	$(QEMU_RUN) ./xzcblat2 < zin2
 endif
 
 all3: xscblat3 xdcblat3 xccblat3 xzcblat3
@@ -74,10 +74,10 @@ ifeq ($(USE_OPENMP), 1)
 	OMP_NUM_THREADS=2 ./xccblat3 < cin3
 	OMP_NUM_THREADS=2 ./xzcblat3 < zin3
 else
-	OPENBLAS_NUM_THREADS=2 ./xscblat3 < sin3
-	OPENBLAS_NUM_THREADS=2 ./xdcblat3 < din3
-	OPENBLAS_NUM_THREADS=2 ./xccblat3 < cin3
-	OPENBLAS_NUM_THREADS=2 ./xzcblat3 < zin3
+	$(QEMU_RUN) ./xscblat3 < sin3
+	$(QEMU_RUN) ./xdcblat3 < din3
+	$(QEMU_RUN) ./xccblat3 < cin3
+	$(QEMU_RUN) ./xzcblat3 < zin3
 endif
 
 all3_3m: xzcblat3_3m xccblat3_3m
@@ -85,8 +85,8 @@ ifeq ($(USE_OPENMP), 1)
 	OMP_NUM_THREADS=2 ./xccblat3_3m < cin3_3m
 	OMP_NUM_THREADS=2 ./xzcblat3_3m < zin3_3m
 else
-	OPENBLAS_NUM_THREADS=2 ./xccblat3_3m < cin3_3m
-	OPENBLAS_NUM_THREADS=2 ./xzcblat3_3m < zin3_3m
+	$(QEMU_RUN) ./xccblat3_3m < cin3_3m
+	$(QEMU_RUN) ./xzcblat3_3m < zin3_3m
 endif
 
 
