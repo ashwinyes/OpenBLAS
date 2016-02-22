@@ -28,8 +28,8 @@ USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #define ASSEMBLER
 #include "common.h"
 
-/*                   X0          X1          X2          s0         X3        x4       x5           x6 */
-/*int CNAME(BLASLONG bm,BLASLONG bn,BLASLONG bk,FLOAT alpha0,FLOAT* ba,FLOAT* bb,FLOAT* C,BLASLONG ldc )*/
+/*                   X0          X1          X2          s0        X3        x4       x5           x6            x7*/
+/*int CNAME(BLASLONG bm,BLASLONG bn,BLASLONG bk,FLOAT alpha0,FLOAT* ba,FLOAT* bb,FLOAT* C,BLASLONG ldc, BLASLONG offset) */
 
 #define origM		x0
 #define origN		x1
@@ -38,7 +38,7 @@ USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #define origPB		x4
 #define pC		x5
 #define LDC		x6
-#define temp		x7
+#define offset		x7
 #define counterL	x8
 #define counterI	x9
 #define counterJ	x10
@@ -47,6 +47,9 @@ USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #define pCRow1		x13
 #define pCRow2		x14
 #define pA		x15
+#define temp		x16
+#define tempOffset	x17
+#define tempK		x18
 
 #define alpha0		d2
 #define alphaV0		v2.d[0]
@@ -64,7 +67,7 @@ USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 // 04 origPB
 // 05 pC
 // 06 origLDC -> LDC
-// 07 temp
+// 07 offset
 // 08 counterL
 // 09 counterI
 // 10 counterJ
@@ -73,9 +76,9 @@ USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 // 13 pCRow1
 // 14 pCRow2
 // 15 pA
-// 16
-// 17
-// 18 must save
+// 16 temp
+// 17 tempOffset
+// 18 must save tempK
 // 19 must save
 // 20 must save
 // 21 must save
@@ -298,56 +301,48 @@ USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 .macro SAVE4x8
 	add	pCRow1, pCRow0, LDC
 
-	ld1	{v8.2d, v9.2d}, [pCRow0]
-	fmla	v8.2d, v16.2d, alphaV0
-	fmla	v9.2d, v17.2d, alphaV1
+	fmul	v8.2d, v16.2d, alphaV0
+	fmul	v9.2d, v17.2d, alphaV1
 	st1 	{v8.2d, v9.2d}, [pCRow0]
 
 	add	pCRow2, pCRow1, LDC
 
-	ld1	{v10.2d, v11.2d}, [pCRow1]
-	fmla	v10.2d, v18.2d, alphaV2
-	fmla	v11.2d, v19.2d, alphaV3
+	fmul	v10.2d, v18.2d, alphaV2
+	fmul	v11.2d, v19.2d, alphaV3
 	st1 	{v10.2d, v11.2d}, [pCRow1]
 
 	add	pCRow1, pCRow2, LDC
 
-	ld1	{v12.2d, v13.2d}, [pCRow2]
-	fmla	v12.2d, v20.2d, alphaV0
-	fmla	v13.2d, v21.2d, alphaV1
+	fmul	v12.2d, v20.2d, alphaV0
+	fmul	v13.2d, v21.2d, alphaV1
 	st1 	{v12.2d, v13.2d}, [pCRow2]
 
 	add	pCRow2, pCRow1, LDC
 
-	ld1	{v14.2d, v15.2d}, [pCRow1]
-	fmla	v14.2d, v22.2d, alphaV2
-	fmla	v15.2d, v23.2d, alphaV3
+	fmul	v14.2d, v22.2d, alphaV2
+	fmul	v15.2d, v23.2d, alphaV3
 	st1 	{v14.2d, v15.2d}, [pCRow1]
 
 	add	pCRow1, pCRow2, LDC
 
-	ld1	{v8.2d, v9.2d}, [pCRow2]
-	fmla	v8.2d, v24.2d, alphaV0
-	fmla	v9.2d, v25.2d, alphaV1
+	fmul	v8.2d, v24.2d, alphaV0
+	fmul	v9.2d, v25.2d, alphaV1
 	st1 	{v8.2d, v9.2d}, [pCRow2]
 
 	add	pCRow2, pCRow1, LDC
 
-	ld1	{v10.2d, v11.2d}, [pCRow1]
-	fmla	v10.2d, v26.2d, alphaV2
-	fmla	v11.2d, v27.2d, alphaV3
+	fmul	v10.2d, v26.2d, alphaV2
+	fmul	v11.2d, v27.2d, alphaV3
 	st1 	{v10.2d, v11.2d}, [pCRow1]
 
 	add	pCRow1, pCRow2, LDC
 
-	ld1	{v12.2d, v13.2d}, [pCRow2]
-	fmla	v12.2d, v28.2d, alphaV0
-	fmla	v13.2d, v29.2d, alphaV1
+	fmul	v12.2d, v28.2d, alphaV0
+	fmul	v13.2d, v29.2d, alphaV1
 	st1 	{v12.2d, v13.2d}, [pCRow2]
 
-	ld1	{v14.2d, v15.2d}, [pCRow1]
-	fmla	v14.2d, v30.2d, alphaV2
-	fmla	v15.2d, v31.2d, alphaV3
+	fmul	v14.2d, v30.2d, alphaV2
+	fmul	v15.2d, v31.2d, alphaV3
 	st1 	{v14.2d, v15.2d}, [pCRow1]
 
 	add	pCRow0, pCRow0, #32
@@ -390,50 +385,42 @@ USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 .macro SAVE2x8
 	add	pCRow1, pCRow0, LDC
 
-	ld1	{v8.2d}, [pCRow0]
-	fmla	v8.2d, v16.2d, alphaV0
+	fmul	v8.2d, v16.2d, alphaV0
 	st1 	{v8.2d}, [pCRow0]
 
 	add	pCRow2, pCRow1, LDC
 
-	ld1	{v10.2d}, [pCRow1]
-	fmla	v10.2d, v18.2d, alphaV2
+	fmul	v10.2d, v18.2d, alphaV2
 	st1 	{v10.2d}, [pCRow1]
 
 	add	pCRow1, pCRow2, LDC
 
-	ld1	{v12.2d}, [pCRow2]
-	fmla	v12.2d, v20.2d, alphaV0
+	fmul	v12.2d, v20.2d, alphaV0
 	st1 	{v12.2d}, [pCRow2]
 
 	add	pCRow2, pCRow1, LDC
 
-	ld1	{v14.2d}, [pCRow1]
-	fmla	v14.2d, v22.2d, alphaV2
+	fmul	v14.2d, v22.2d, alphaV2
 	st1 	{v14.2d}, [pCRow1]
 
 	add	pCRow1, pCRow2, LDC
 
-	ld1	{v8.2d}, [pCRow2]
-	fmla	v8.2d, v24.2d, alphaV0
+	fmul	v8.2d, v24.2d, alphaV0
 	st1 	{v8.2d}, [pCRow2]
 
 	add	pCRow2, pCRow1, LDC
 
-	ld1	{v10.2d}, [pCRow1]
-	fmla	v10.2d, v26.2d, alphaV2
+	fmul	v10.2d, v26.2d, alphaV2
 	st1 	{v10.2d}, [pCRow1]
 
 	add	pCRow1, pCRow2, LDC
 
-	ld1	{v12.2d}, [pCRow2]
-	fmla	v12.2d, v28.2d, alphaV0
+	fmul	v12.2d, v28.2d, alphaV0
 	st1 	{v12.2d}, [pCRow2]
 
 	add	pCRow2, pCRow1, LDC
 
-	ld1	{v14.2d}, [pCRow1]
-	fmla	v14.2d, v30.2d, alphaV2
+	fmul	v14.2d, v30.2d, alphaV2
 	st1 	{v14.2d}, [pCRow1]
 
 	add	pCRow0, pCRow0, #16
@@ -465,36 +452,28 @@ USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 .macro SAVE1x8
 	add	pCRow1, pCRow0, LDC
 
-	ld1	{v8.d}[0], [pCRow0]
-	ld1	{v8.d}[1], [pCRow1]
-	fmla	v8.2d, v16.2d, alphaV0
+	fmul	v8.2d, v16.2d, alphaV0
 	st1	{v8.d}[0], [pCRow0]
 	st1	{v8.d}[1], [pCRow1]
 
 	add	pCRow2, pCRow1, LDC
 	add	pCRow1, pCRow2, LDC
 
-	ld1	{v10.d}[0], [pCRow2]
-	ld1	{v10.d}[1], [pCRow1]
-	fmla	v10.2d, v20.2d, alphaV1
+	fmul	v10.2d, v20.2d, alphaV1
 	st1	{v10.d}[0], [pCRow2]
 	st1	{v10.d}[1], [pCRow1]
 
 	add	pCRow2, pCRow1, LDC
 	add	pCRow1, pCRow2, LDC
 
-	ld1	{v12.d}[0], [pCRow2]
-	ld1	{v12.d}[1], [pCRow1]
-	fmla	v12.2d, v24.2d, alphaV2
+	fmul	v12.2d, v24.2d, alphaV2
 	st1	{v12.d}[0], [pCRow2]
 	st1	{v12.d}[1], [pCRow1]
 
 	add	pCRow2, pCRow1, LDC
 	add	pCRow1, pCRow2, LDC
 
-	ld1	{v14.d}[0], [pCRow2]
-	ld1	{v14.d}[1], [pCRow1]
-	fmla	v14.2d, v28.2d, alphaV3
+	fmul	v14.2d, v28.2d, alphaV3
 	st1	{v14.d}[0], [pCRow2]
 	st1	{v14.d}[1], [pCRow1]
 
@@ -616,30 +595,26 @@ USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 .endm
 
 .macro SAVE4x4
-	ld1	{v8.2d, v9.2d}, [pCRow0]
-	fmla	v8.2d, v16.2d, alphaV0
-	fmla	v9.2d, v17.2d, alphaV1
+	fmul	v8.2d, v16.2d, alphaV0
+	fmul	v9.2d, v17.2d, alphaV1
 	st1 	{v8.2d, v9.2d}, [pCRow0]
 
 	add	pCRow1, pCRow0, LDC
 
-	ld1	{v12.2d, v13.2d}, [pCRow1]
-	fmla	v12.2d, v20.2d, alphaV2
-	fmla	v13.2d, v21.2d, alphaV3
+	fmul	v12.2d, v20.2d, alphaV2
+	fmul	v13.2d, v21.2d, alphaV3
 	st1 	{v12.2d, v13.2d}, [pCRow1]
 
 	add	pCRow2, pCRow1, LDC
 
-	ld1	{v8.2d, v9.2d}, [pCRow2]
-	fmla	v8.2d, v24.2d, alphaV0
-	fmla	v9.2d, v25.2d, alphaV1
+	fmul	v8.2d, v24.2d, alphaV0
+	fmul	v9.2d, v25.2d, alphaV1
 	st1 	{v8.2d, v9.2d}, [pCRow2]
 
 	add	pCRow1, pCRow2, LDC
 
-	ld1	{v12.2d, v13.2d}, [pCRow1]
-	fmla	v12.2d, v28.2d, alphaV2
-	fmla	v13.2d, v29.2d, alphaV3
+	fmul	v12.2d, v28.2d, alphaV2
+	fmul	v13.2d, v29.2d, alphaV3
 	st1 	{v12.2d, v13.2d}, [pCRow1]
 
 	add	pCRow0, pCRow0, #32
@@ -667,26 +642,22 @@ USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 .endm
 
 .macro SAVE2x4
-	ld1	{v8.2d}, [pCRow0]
-	fmla	v8.2d, v16.2d, alphaV0
+	fmul	v8.2d, v16.2d, alphaV0
 	st1	{v8.2d}, [pCRow0]
 
 	add	pCRow1, pCRow0, LDC
 
-	ld1	{v12.2d}, [pCRow1]
-	fmla	v12.2d, v20.2d, alphaV1
+	fmul	v12.2d, v20.2d, alphaV1
 	st1	{v12.2d}, [pCRow1]
 
 	add	pCRow2, pCRow1, LDC
 
-	ld1	{v8.2d}, [pCRow2]
-	fmla	v8.2d, v24.2d, alphaV2
+	fmul	v8.2d, v24.2d, alphaV2
 	st1	{v8.2d}, [pCRow2]
 
 	add	pCRow1, pCRow2, LDC
 
-	ld1	{v12.2d}, [pCRow1]
-	fmla	v12.2d, v28.2d, alphaV3
+	fmul	v12.2d, v28.2d, alphaV3
 	st1	{v12.2d}, [pCRow1]
 
 	add	pCRow0, pCRow0, #16
@@ -713,18 +684,14 @@ USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 .macro SAVE1x4
 	add	pCRow1, pCRow0, LDC
 
-	ld1	{v8.d}[0], [pCRow0]
-	ld1	{v8.d}[1], [pCRow1]
-	fmla	v8.2d, v16.2d, alphaV0
+	fmul	v8.2d, v16.2d, alphaV0
 	st1	{v8.d}[0], [pCRow0]
 	st1	{v8.d}[1], [pCRow1]
 
 	add	pCRow2, pCRow1, LDC
 	add	pCRow1, pCRow2, LDC
 
-	ld1	{v12.d}[0], [pCRow2]
-	ld1	{v12.d}[1], [pCRow1]
-	fmla	v12.2d, v20.2d, alphaV1
+	fmul	v12.2d, v20.2d, alphaV1
 	st1	{v12.d}[0], [pCRow2]
 	st1	{v12.d}[1], [pCRow1]
 
@@ -753,16 +720,14 @@ USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 .endm
 
 .macro SAVE4x2
-	ld1	{v8.2d, v9.2d}, [pCRow0]
-	fmla	v8.2d, v16.2d, alphaV0
-	fmla	v9.2d, v17.2d, alphaV1
+	fmul	v8.2d, v16.2d, alphaV0
+	fmul	v9.2d, v17.2d, alphaV1
 	st1	{v8.2d, v9.2d}, [pCRow0]
 
 	add	pCRow1, pCRow0, LDC
 
-	ld1	{v12.2d, v13.2d}, [pCRow1]
-	fmla	v12.2d, v20.2d, alphaV2
-	fmla	v13.2d, v21.2d, alphaV3
+	fmul	v12.2d, v20.2d, alphaV2
+	fmul	v13.2d, v21.2d, alphaV3
 	st1	{v12.2d, v13.2d}, [pCRow1]
 
 	add	pCRow0, pCRow0, #32
@@ -787,14 +752,12 @@ USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 .endm
 
 .macro SAVE2x2
-	ld1	{v8.2d}, [pCRow0]
-	fmla	v8.2d, v16.2d, alphaV0
+	fmul	v8.2d, v16.2d, alphaV0
 	st1	{v8.2d}, [pCRow0]
 
 	add	pCRow1 , pCRow0, LDC
 
-	ld1	{v12.2d}, [pCRow1]
-	fmla	v12.2d, v20.2d, alphaV1
+	fmul	v12.2d, v20.2d, alphaV1
 	st1	{v12.2d}, [pCRow1]
 
 	add	pCRow0, pCRow0, #16
@@ -819,9 +782,7 @@ USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 .macro SAVE1x2
 	add	pCRow1 , pCRow0, LDC
 
-	ld1	{v8.d}[0], [pCRow0]
-	ld1	{v8.d}[1], [pCRow1]
-	fmla	v8.2d, v16.2d, alphaV0
+	fmul	v8.2d, v16.2d, alphaV0
 	st1	{v8.d}[0], [pCRow0]
 	st1	{v8.d}[1], [pCRow1]
 
@@ -847,9 +808,8 @@ USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 .endm
 
 .macro SAVE4x1
-	ld1	{v8.2d, v9.2d}, [pCRow0]
-	fmla	v8.2d, v16.2d, alphaV0
-	fmla	v9.2d, v17.2d, alphaV1
+	fmul	v8.2d, v16.2d, alphaV0
+	fmul	v9.2d, v17.2d, alphaV1
 	st1	{v8.2d, v9.2d}, [pCRow0]
 
 	add	pCRow0, pCRow0, #32
@@ -875,8 +835,7 @@ USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 .endm
 
 .macro SAVE2x1
-	ld1	{v8.2d}, [pCRow0]
-	fmla	v8.2d, v16.2d, alphaV0
+	fmul	v8.2d, v16.2d, alphaV0
 	st1	{v8.2d}, [pCRow0]
 
 	add	pCRow0, pCRow0, #16
@@ -899,8 +858,7 @@ USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 .endm
 
 .macro SAVE1x1
-	ldr	d8, [pCRow0]
-	fmadd	d8, d16, alpha0, d8
+	fmul	d8, d16, alpha0
 	str 	d8, [pCRow0]
 
 	add	pCRow0, pCRow0, #8
@@ -933,113 +891,169 @@ USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 	lsl	LDC, LDC, #3			// ldc = ldc * 8
 
+#if !defined(LEFT)
+	neg	tempOffset, offset
+#endif
+
 	mov	pB, origPB
 
 	mov	counterJ, origN
 	asr 	counterJ, counterJ, #3		// J = J / 8
 	cmp 	counterJ, #0
-	ble	dgemm_kernel_L4_BEGIN
+	ble	dtrmm_kernel_L4_BEGIN
 
 /******************************************************************************/
 
-dgemm_kernel_L8_BEGIN:
+dtrmm_kernel_L8_BEGIN:
 
 	mov	pCRow0, pC			// pCRow0 = C
 	add	pC, pC, LDC, lsl #3
 
+#if defined(LEFT)
+	mov	tempOffset, offset
+#endif
+
 	mov	pA, origPA			// pA = start of A array
 
-dgemm_kernel_L8_M4_BEGIN:
+dtrmm_kernel_L8_M4_BEGIN:
 
 	mov	counterI, origM
 	asr 	counterI, counterI, #2		// counterI = counterI / 4
 	cmp 	counterI, #0
-	ble	dgemm_kernel_L8_M2_BEGIN
+	ble	dtrmm_kernel_L8_M2_BEGIN
 
-dgemm_kernel_L8_M4_20:
+dtrmm_kernel_L8_M4_20:
 
+#if (defined(LEFT) &&  defined(TRANSA)) || (!defined(LEFT) && !defined(TRANSA))
 	mov	pB, origPB
+#else
+	mov	pB, origPB
+	lsl	temp, tempOffset, #5
+	add	pA, pA, temp
+	lsl	temp, tempOffset, #6
+	add	pB, pB, temp
+#endif
 
-	asr 	counterL , origK, #1		// L = K / 2
+#if (defined(LEFT) && !defined(TRANSA)) || (!defined(LEFT) && defined(TRANSA))
+	sub	tempK, origK, tempOffset
+#elif defined(LEFT)
+	add	tempK, tempOffset, #4
+#else
+	add	tempK, tempOffset, #8
+#endif
+
+	asr 	counterL, tempK, #1		// L = K / 2
 	cmp	counterL , #2			// is there at least 4 to do?
-	blt	dgemm_kernel_L8_M4_32
+	blt	dtrmm_kernel_L8_M4_32
 
 	KERNEL4x8_I				// do one in the K
 	KERNEL4x8_M2				// do another in the K
 
 	subs	counterL, counterL, #2
-	ble	dgemm_kernel_L8_M4_22a
+	ble	dtrmm_kernel_L8_M4_22a
 	.align 5
 
-dgemm_kernel_L8_M4_22:
+dtrmm_kernel_L8_M4_22:
 
 	KERNEL4x8_M1
 	KERNEL4x8_M2
 
 	subs	counterL, counterL, #1
-	bgt	dgemm_kernel_L8_M4_22
+	bgt	dtrmm_kernel_L8_M4_22
 
 
-dgemm_kernel_L8_M4_22a:
+dtrmm_kernel_L8_M4_22a:
 
 	KERNEL4x8_M1
 	KERNEL4x8_E
 
-	b	 dgemm_kernel_L8_M4_44
+	b	 dtrmm_kernel_L8_M4_44
 
-dgemm_kernel_L8_M4_32:
+dtrmm_kernel_L8_M4_32:
 
 	tst	counterL, #1
-	ble	dgemm_kernel_L8_M4_40
+	ble	dtrmm_kernel_L8_M4_40
 
 	KERNEL4x8_I
 
 	KERNEL4x8_E
 
-	b	dgemm_kernel_L8_M4_44
+	b	dtrmm_kernel_L8_M4_44
 
 
-dgemm_kernel_L8_M4_40:
+dtrmm_kernel_L8_M4_40:
 
 	INIT4x8
 
-dgemm_kernel_L8_M4_44:
+dtrmm_kernel_L8_M4_44:
 
-	ands	counterL , origK, #1
-	ble	dgemm_kernel_L8_M4_100
+	ands	counterL, tempK, #1
+	ble	dtrmm_kernel_L8_M4_100
 
-dgemm_kernel_L8_M4_46:
+dtrmm_kernel_L8_M4_46:
 
 	KERNEL4x8_SUB
 
-dgemm_kernel_L8_M4_100:
+dtrmm_kernel_L8_M4_100:
 
 	SAVE4x8
 
-dgemm_kernel_L8_M4_END:
-	subs	counterI, counterI, #1
-	bne	dgemm_kernel_L8_M4_20
+#if (defined(LEFT) &&  defined(TRANSA)) || (!defined(LEFT) && !defined(TRANSA))
+	sub	tempK, origK, tempOffset
+#if defined(LEFT)
+	sub	tempK, tempK, #4
+#else
+	sub	tempK, tempK, #8
+#endif
+	lsl	temp, tempK, #5
+	add	pA, pA, temp
+	lsl	temp, tempK, #6
+	add	pB, pB, temp
+#endif
+#if defined(LEFT)
+	add	tempOffset, tempOffset, #4
+#endif
 
-dgemm_kernel_L8_M2_BEGIN:
+dtrmm_kernel_L8_M4_END:
+	subs	counterI, counterI, #1
+	bne	dtrmm_kernel_L8_M4_20
+
+dtrmm_kernel_L8_M2_BEGIN:
 
 	mov	counterI, origM
 	tst	counterI , #3
-	ble	dgemm_kernel_L8_END
+	ble	dtrmm_kernel_L8_END
 
 	tst	counterI, #2			// counterI = counterI / 2
-	ble	dgemm_kernel_L8_M1_BEGIN
+	ble	dtrmm_kernel_L8_M1_BEGIN
 
-dgemm_kernel_L8_M2_20:
+dtrmm_kernel_L8_M2_20:
 
 	INIT2x8
 
+#if (defined(LEFT) &&  defined(TRANSA)) || (!defined(LEFT) && !defined(TRANSA))
 	mov	pB, origPB
+#else
+	mov	pB, origPB
+	lsl	temp, tempOffset, #4
+	add	pA, pA, temp
+	lsl	temp, tempOffset, #6
+	add	pB, pB, temp
+#endif
 
-	asr 	counterL , origK, #3		// counterL = counterL / 8
+#if (defined(LEFT) && !defined(TRANSA)) || (!defined(LEFT) && defined(TRANSA))
+	sub	tempK, origK, tempOffset
+#elif defined(LEFT)
+	add	tempK, tempOffset, #2
+#else
+	add	tempK, tempOffset, #8
+#endif
+
+	asr 	counterL, tempK, #3		// counterL = counterL / 8
 	cmp	counterL , #0
-	ble	dgemm_kernel_L8_M2_40
+	ble	dtrmm_kernel_L8_M2_40
 
-dgemm_kernel_L8_M2_22:
+dtrmm_kernel_L8_M2_22:
 
 	KERNEL2x8_SUB
 	KERNEL2x8_SUB
@@ -1052,44 +1066,77 @@ dgemm_kernel_L8_M2_22:
 	KERNEL2x8_SUB
 
 	subs	counterL, counterL, #1
-	bgt	dgemm_kernel_L8_M2_22
+	bgt	dtrmm_kernel_L8_M2_22
 
 
-dgemm_kernel_L8_M2_40:
+dtrmm_kernel_L8_M2_40:
 
-	ands	counterL , origK, #7		// counterL = counterL % 8
-	ble	dgemm_kernel_L8_M2_100
+	ands	counterL, tempK, #7		// counterL = counterL % 8
+	ble	dtrmm_kernel_L8_M2_100
 
-dgemm_kernel_L8_M2_42:
+dtrmm_kernel_L8_M2_42:
 
 	KERNEL2x8_SUB
 
 	subs	counterL, counterL, #1
-	bgt	dgemm_kernel_L8_M2_42
+	bgt	dtrmm_kernel_L8_M2_42
 
-dgemm_kernel_L8_M2_100:
+dtrmm_kernel_L8_M2_100:
 
 	SAVE2x8
 
-dgemm_kernel_L8_M2_END:
+
+#if (defined(LEFT) &&  defined(TRANSA)) || (!defined(LEFT) && !defined(TRANSA))
+	sub	tempK, origK, tempOffset
+#if defined(LEFT)
+	sub	tempK, tempK, #2
+#else
+	sub	tempK, tempK, #8
+#endif
+	lsl	temp, tempK, #4
+	add	pA, pA, temp
+	lsl	temp, tempK, #6
+	add	pB, pB, temp
+#endif
+#if defined(LEFT)
+	add	tempOffset, tempOffset, #2
+#endif
+
+dtrmm_kernel_L8_M2_END:
 
 
-dgemm_kernel_L8_M1_BEGIN:
+dtrmm_kernel_L8_M1_BEGIN:
 
 	tst	counterI, #1			// counterI = counterI % 2
-	ble	dgemm_kernel_L8_END
+	ble	dtrmm_kernel_L8_END
 
-dgemm_kernel_L8_M1_20:
+dtrmm_kernel_L8_M1_20:
 
 	INIT1x8
 
+#if (defined(LEFT) &&  defined(TRANSA)) || (!defined(LEFT) && !defined(TRANSA))
 	mov	pB, origPB
+#else
+	mov	pB, origPB
+	lsl	temp, tempOffset, #3
+	add	pA, pA, temp
+	lsl	temp, tempOffset, #6
+	add	pB, pB, temp
+#endif
 
-	asr 	counterL , origK, #3		// counterL = counterL / 8
+#if (defined(LEFT) && !defined(TRANSA)) || (!defined(LEFT) && defined(TRANSA))
+	sub	tempK, origK, tempOffset
+#elif defined(LEFT)
+	add	tempK, tempOffset, #1
+#else
+	add	tempK, tempOffset, #8
+#endif
+
+	asr 	counterL, tempK, #3		// counterL = counterL / 8
 	cmp	counterL , #0
-	ble	dgemm_kernel_L8_M1_40
+	ble	dtrmm_kernel_L8_M1_40
 
-dgemm_kernel_L8_M1_22:
+dtrmm_kernel_L8_M1_22:
 	KERNEL1x8_SUB
 	KERNEL1x8_SUB
 	KERNEL1x8_SUB
@@ -1101,141 +1148,209 @@ dgemm_kernel_L8_M1_22:
 	KERNEL1x8_SUB
 
 	subs	counterL, counterL, #1
-	bgt	dgemm_kernel_L8_M1_22
+	bgt	dtrmm_kernel_L8_M1_22
 
 
-dgemm_kernel_L8_M1_40:
+dtrmm_kernel_L8_M1_40:
 
-	ands	counterL , origK, #7		// counterL = counterL % 8
-	ble	dgemm_kernel_L8_M1_100
+	ands	counterL, tempK, #7		// counterL = counterL % 8
+	ble	dtrmm_kernel_L8_M1_100
 
-dgemm_kernel_L8_M1_42:
+dtrmm_kernel_L8_M1_42:
 
 	KERNEL1x8_SUB
 
 	subs	counterL, counterL, #1
-	bgt	dgemm_kernel_L8_M1_42
+	bgt	dtrmm_kernel_L8_M1_42
 
-dgemm_kernel_L8_M1_100:
+dtrmm_kernel_L8_M1_100:
 
 	SAVE1x8
 
-dgemm_kernel_L8_END:
+#if (defined(LEFT) &&  defined(TRANSA)) || (!defined(LEFT) && !defined(TRANSA))
+	sub	tempK, origK, tempOffset
+#if defined(LEFT)
+	sub	tempK, tempK, #1
+#else
+	sub	tempK, tempK, #8
+#endif
+	lsl	temp, tempK, #3
+	add	pA, pA, temp
+	lsl	temp, tempK, #6
+	add	pB, pB, temp
+#endif
+#if defined(LEFT)
+	add	tempOffset, tempOffset, #1
+#endif
+
+dtrmm_kernel_L8_END:
 
 	lsl	temp, origK, #6
 	add	origPB, origPB, temp		// B = B + K * 8 * 8
 
+#if !defined(LEFT)
+	add	tempOffset, tempOffset, #8
+#endif
+
 	subs	counterJ, counterJ , #1		// j--
-	bgt	dgemm_kernel_L8_BEGIN
+	bgt	dtrmm_kernel_L8_BEGIN
 
 
 /******************************************************************************/
 
-dgemm_kernel_L4_BEGIN:
+dtrmm_kernel_L4_BEGIN:
 
 	mov	counterJ , origN
 	tst	counterJ , #7
-	ble	dgemm_kernel_L999
+	ble	dtrmm_kernel_L999
 
 	tst	counterJ , #4
-	ble	dgemm_kernel_L2_BEGIN
+	ble	dtrmm_kernel_L2_BEGIN
 
 	mov	pCRow0, pC			// pCRow0 = C
 	add	pC, pC, LDC, lsl #2
 
+#if defined(LEFT)
+	mov	tempOffset, offset
+#endif
+
 	mov	pA, origPA			// pA = start of A array
 
-dgemm_kernel_L4_M4_BEGIN:
+dtrmm_kernel_L4_M4_BEGIN:
 
 	mov	counterI, origM
 	asr 	counterI, counterI, #2		// counterI = counterI / 4
 	cmp 	counterI, #0
-	ble	dgemm_kernel_L4_M2_BEGIN
+	ble	dtrmm_kernel_L4_M2_BEGIN
 
-dgemm_kernel_L4_M4_20:
+dtrmm_kernel_L4_M4_20:
 
+#if (defined(LEFT) &&  defined(TRANSA)) || (!defined(LEFT) && !defined(TRANSA))
 	mov	pB, origPB
+#else
+	mov	pB, origPB
+	lsl	temp, tempOffset, #5
+	add	pB, pB, temp
+	add	pA, pA, temp
+#endif
 
-	asr 	counterL , origK, #1		// L = K / 2
+#if (defined(LEFT) && !defined(TRANSA)) || (!defined(LEFT) && defined(TRANSA))
+	sub	tempK, origK, tempOffset
+#elif defined(LEFT)
+	add	tempK, tempOffset, #4
+#else
+	add	tempK, tempOffset, #4
+#endif
+
+	asr 	counterL, tempK, #1		// L = K / 2
 	cmp	counterL , #2			// is there at least 4 to do?
-	blt	dgemm_kernel_L4_M4_32
+	blt	dtrmm_kernel_L4_M4_32
 
 	KERNEL4x4_I				// do one in the K
 	KERNEL4x4_M2				// do another in the K
 
 	subs	counterL, counterL, #2
-	ble	dgemm_kernel_L4_M4_22a
+	ble	dtrmm_kernel_L4_M4_22a
 	.align 5
 
-dgemm_kernel_L4_M4_22:
+dtrmm_kernel_L4_M4_22:
 
 	KERNEL4x4_M1
 	KERNEL4x4_M2
 
 	subs	counterL, counterL, #1
-	bgt	dgemm_kernel_L4_M4_22
+	bgt	dtrmm_kernel_L4_M4_22
 
 
-dgemm_kernel_L4_M4_22a:
+dtrmm_kernel_L4_M4_22a:
 
 	KERNEL4x4_M1
 	KERNEL4x4_E
 
-	b	 dgemm_kernel_L4_M4_44
+	b	 dtrmm_kernel_L4_M4_44
 
-dgemm_kernel_L4_M4_32:
+dtrmm_kernel_L4_M4_32:
 
 	tst	counterL, #1
-	ble	dgemm_kernel_L4_M4_40
+	ble	dtrmm_kernel_L4_M4_40
 
 	KERNEL4x4_I
 
 	KERNEL4x4_E
 
-	b	dgemm_kernel_L4_M4_44
+	b	dtrmm_kernel_L4_M4_44
 
 
-dgemm_kernel_L4_M4_40:
+dtrmm_kernel_L4_M4_40:
 
 	INIT4x4
 
-dgemm_kernel_L4_M4_44:
+dtrmm_kernel_L4_M4_44:
 
-	ands	counterL , origK, #1
-	ble	dgemm_kernel_L4_M4_100
+	ands	counterL , tempK, #1
+	ble	dtrmm_kernel_L4_M4_100
 
-dgemm_kernel_L4_M4_46:
+dtrmm_kernel_L4_M4_46:
 
 	KERNEL4x4_SUB
 
-dgemm_kernel_L4_M4_100:
+dtrmm_kernel_L4_M4_100:
 
 	SAVE4x4
+#if (defined(LEFT) &&  defined(TRANSA)) || (!defined(LEFT) && !defined(TRANSA))
+	sub	tempK, origK, tempOffset
+#if defined(LEFT)
+	sub	tempK, tempK, #4
+#else
+	sub	tempK, tempK, #4
+#endif
+	lsl	temp, tempK, #5
+	add	pA, pA, temp
+	add	pB, pB, temp
+#endif
+#if defined(LEFT)
+	add	tempOffset, tempOffset, #4
+#endif
 
-dgemm_kernel_L4_M4_END:
+dtrmm_kernel_L4_M4_END:
 	subs	counterI, counterI, #1
-	bne	dgemm_kernel_L4_M4_20
+	bne	dtrmm_kernel_L4_M4_20
 
-dgemm_kernel_L4_M2_BEGIN:
+dtrmm_kernel_L4_M2_BEGIN:
 
 	mov	counterI, origM
 	tst	counterI , #3
-	ble	dgemm_kernel_L4_END
+	ble	dtrmm_kernel_L4_END
 
 	tst	counterI, #2			// counterI = counterI / 2
-	ble	dgemm_kernel_L4_M1_BEGIN
+	ble	dtrmm_kernel_L4_M1_BEGIN
 
-dgemm_kernel_L4_M2_20:
+dtrmm_kernel_L4_M2_20:
 
 	INIT2x4
 
+#if (defined(LEFT) &&  defined(TRANSA)) || (!defined(LEFT) && !defined(TRANSA))
 	mov	pB, origPB
+#else
+	mov	pB, origPB
+	lsl	temp, tempOffset, #4
+	add	pA, pA, temp
+	lsl	temp, tempOffset, #5
+	add	pB, pB, temp
+#endif
 
-	asr 	counterL , origK, #3		// counterL = counterL / 8
+#if (defined(LEFT) && !defined(TRANSA)) || (!defined(LEFT) && defined(TRANSA))
+	sub	tempK, origK, tempOffset
+#elif defined(LEFT)
+	add	tempK, tempOffset, #2
+#else
+	add	tempK, tempOffset, #4
+#endif
+	asr 	counterL , tempK, #3		// counterL = counterL / 8
 	cmp	counterL , #0
-	ble	dgemm_kernel_L4_M2_40
+	ble	dtrmm_kernel_L4_M2_40
 
-dgemm_kernel_L4_M2_22:
+dtrmm_kernel_L4_M2_22:
 
 	KERNEL2x4_SUB
 	KERNEL2x4_SUB
@@ -1248,44 +1363,74 @@ dgemm_kernel_L4_M2_22:
 	KERNEL2x4_SUB
 
 	subs	counterL, counterL, #1
-	bgt	dgemm_kernel_L4_M2_22
+	bgt	dtrmm_kernel_L4_M2_22
 
 
-dgemm_kernel_L4_M2_40:
+dtrmm_kernel_L4_M2_40:
 
-	ands	counterL , origK, #7		// counterL = counterL % 8
-	ble	dgemm_kernel_L4_M2_100
+	ands	counterL , tempK, #7		// counterL = counterL % 8
+	ble	dtrmm_kernel_L4_M2_100
 
-dgemm_kernel_L4_M2_42:
+dtrmm_kernel_L4_M2_42:
 
 	KERNEL2x4_SUB
 
 	subs	counterL, counterL, #1
-	bgt	dgemm_kernel_L4_M2_42
+	bgt	dtrmm_kernel_L4_M2_42
 
-dgemm_kernel_L4_M2_100:
+dtrmm_kernel_L4_M2_100:
 
 	SAVE2x4
 
-dgemm_kernel_L4_M2_END:
+#if (defined(LEFT) &&  defined(TRANSA)) || (!defined(LEFT) && !defined(TRANSA))
+	sub	tempK, origK, tempOffset
+#if defined(LEFT)
+	sub	tempK, tempK, #2
+#else
+	sub	tempK, tempK, #4
+#endif
+	lsl	temp, tempK, #4
+	add	pA, pA, temp
+	lsl	temp, tempK, #5
+	add	pB, pB, temp
+#endif
+#if defined(LEFT)
+	add	tempOffset, tempOffset, #2
+#endif
+dtrmm_kernel_L4_M2_END:
 
 
-dgemm_kernel_L4_M1_BEGIN:
+dtrmm_kernel_L4_M1_BEGIN:
 
 	tst	counterI, #1			// counterI = counterI % 2
-	ble	dgemm_kernel_L4_END
+	ble	dtrmm_kernel_L4_END
 
-dgemm_kernel_L4_M1_20:
+dtrmm_kernel_L4_M1_20:
 
 	INIT1x4
 
+#if (defined(LEFT) &&  defined(TRANSA)) || (!defined(LEFT) && !defined(TRANSA))
 	mov	pB, origPB
+#else
+	mov	pB, origPB
+	lsl	temp, tempOffset, #5
+	add	pB, pB, temp
+	lsl	temp, tempOffset, #3
+	add	pA, pA, temp
+#endif
 
-	asr 	counterL , origK, #3		// counterL = counterL / 8
+#if (defined(LEFT) && !defined(TRANSA)) || (!defined(LEFT) && defined(TRANSA))
+	sub	tempK, origK, tempOffset
+#elif defined(LEFT)
+	add	tempK, tempOffset, #1
+#else
+	add	tempK, tempOffset, #4
+#endif
+	asr 	counterL , tempK, #3		// counterL = counterL / 8
 	cmp	counterL , #0
-	ble	dgemm_kernel_L4_M1_40
+	ble	dtrmm_kernel_L4_M1_40
 
-dgemm_kernel_L4_M1_22:
+dtrmm_kernel_L4_M1_22:
 	KERNEL1x4_SUB
 	KERNEL1x4_SUB
 	KERNEL1x4_SUB
@@ -1297,67 +1442,103 @@ dgemm_kernel_L4_M1_22:
 	KERNEL1x4_SUB
 
 	subs	counterL, counterL, #1
-	bgt	dgemm_kernel_L4_M1_22
+	bgt	dtrmm_kernel_L4_M1_22
 
 
-dgemm_kernel_L4_M1_40:
+dtrmm_kernel_L4_M1_40:
 
-	ands	counterL , origK, #7		// counterL = counterL % 8
-	ble	dgemm_kernel_L4_M1_100
+	ands	counterL , tempK, #7		// counterL = counterL % 8
+	ble	dtrmm_kernel_L4_M1_100
 
-dgemm_kernel_L4_M1_42:
+dtrmm_kernel_L4_M1_42:
 
 	KERNEL1x4_SUB
 
 	subs	counterL, counterL, #1
-	bgt	dgemm_kernel_L4_M1_42
+	bgt	dtrmm_kernel_L4_M1_42
 
-dgemm_kernel_L4_M1_100:
+dtrmm_kernel_L4_M1_100:
 
 	SAVE1x4
 
-dgemm_kernel_L4_END:
+#if (defined(LEFT) &&  defined(TRANSA)) || (!defined(LEFT) && !defined(TRANSA))
+	sub	tempK, origK, tempOffset
+#if defined(LEFT)
+	sub	tempK, tempK, #1
+#else
+	sub	tempK, tempK, #4
+#endif
+	lsl	temp, tempK, #3
+	add	pA, pA, temp
+	lsl	temp, tempK, #5
+	add	pB, pB, temp
+#endif
+#if defined(LEFT)
+	add	tempOffset, tempOffset, #1
+#endif
+dtrmm_kernel_L4_END:
 
 	lsl	temp, origK, #5 
 	add	origPB, origPB, temp		// B = B + K * 4 * 8
+#if !defined(LEFT)
+	add	tempOffset, tempOffset, #4
+#endif
 
 /******************************************************************************/
 
-dgemm_kernel_L2_BEGIN:   // less than 2 left in N direction
+dtrmm_kernel_L2_BEGIN:   // less than 2 left in N direction
 
 	mov	counterJ , origN
 	tst	counterJ , #3
-	ble	dgemm_kernel_L999   // error, N was less than 4?
+	ble	dtrmm_kernel_L999   // error, N was less than 4?
 
 	tst	counterJ , #2
-	ble	dgemm_kernel_L1_BEGIN
+	ble	dtrmm_kernel_L1_BEGIN
 
 	mov	pCRow0, pC			// pCRow0 = pC
 
 	add	pC,pC,LDC, lsl #1
 
+#if defined(LEFT)
+	mov	tempOffset, offset
+#endif
 	mov	pA, origPA			// pA = A
 
 
-dgemm_kernel_L2_M4_BEGIN:
+dtrmm_kernel_L2_M4_BEGIN:
 
 	mov	counterI, origM
 	asr 	counterI, counterI, #2		// counterI = counterI / 4
 	cmp	counterI,#0
-	ble	dgemm_kernel_L2_M2_BEGIN
+	ble	dtrmm_kernel_L2_M2_BEGIN
 
-dgemm_kernel_L2_M4_20:
+dtrmm_kernel_L2_M4_20:
 
 	INIT4x2
 
+#if (defined(LEFT) &&  defined(TRANSA)) || (!defined(LEFT) && !defined(TRANSA))
 	mov	pB, origPB
+#else
+	mov	pB, origPB
+	lsl	temp, tempOffset, #4
+	add	pB, pB, temp
+	lsl	temp, tempOffset, #5
+	add	pA, pA, temp
+#endif
 
-	asr	counterL , origK, #3		// counterL = counterL / 8
+#if (defined(LEFT) && !defined(TRANSA)) || (!defined(LEFT) && defined(TRANSA))
+	sub	tempK, origK, tempOffset
+#elif defined(LEFT)
+	add	tempK, tempOffset, #4
+#else
+	add	tempK, tempOffset, #2
+#endif
+	asr	counterL , tempK, #3		// counterL = counterL / 8
 	cmp	counterL,#0
-	ble	dgemm_kernel_L2_M4_40
+	ble	dtrmm_kernel_L2_M4_40
 	.align 5
 
-dgemm_kernel_L2_M4_22:
+dtrmm_kernel_L2_M4_22:
 	KERNEL4x2_SUB
 	KERNEL4x2_SUB
 	KERNEL4x2_SUB
@@ -1369,51 +1550,81 @@ dgemm_kernel_L2_M4_22:
 	KERNEL4x2_SUB
 
 	subs	counterL, counterL, #1
-	bgt	dgemm_kernel_L2_M4_22
+	bgt	dtrmm_kernel_L2_M4_22
 
 
-dgemm_kernel_L2_M4_40:
+dtrmm_kernel_L2_M4_40:
 
-	ands	counterL , origK, #7		// counterL = counterL % 8
-	ble	dgemm_kernel_L2_M4_100
+	ands	counterL , tempK, #7		// counterL = counterL % 8
+	ble	dtrmm_kernel_L2_M4_100
 
-dgemm_kernel_L2_M4_42:
+dtrmm_kernel_L2_M4_42:
 
 	KERNEL4x2_SUB
 
 	subs	counterL, counterL, #1
-	bgt	dgemm_kernel_L2_M4_42
+	bgt	dtrmm_kernel_L2_M4_42
 
-dgemm_kernel_L2_M4_100:
+dtrmm_kernel_L2_M4_100:
 
 	SAVE4x2
+#if (defined(LEFT) &&  defined(TRANSA)) || (!defined(LEFT) && !defined(TRANSA))
+	sub	tempK, origK, tempOffset
+#if defined(LEFT)
+	sub	tempK, tempK, #4
+#else
+	sub	tempK, tempK, #2
+#endif
+	lsl	temp, tempK, #5
+	add	pA, pA, temp
+	lsl	temp, tempK, #4
+	add	pB, pB, temp
+#endif
+#if defined(LEFT)
+	add	tempOffset, tempOffset, #4
+#endif
 
-dgemm_kernel_L2_M4_END:
+dtrmm_kernel_L2_M4_END:
 
 	subs	counterI, counterI, #1
-	bgt	dgemm_kernel_L2_M4_20
+	bgt	dtrmm_kernel_L2_M4_20
 
 
-dgemm_kernel_L2_M2_BEGIN:
+dtrmm_kernel_L2_M2_BEGIN:
 
 	mov	counterI, origM
 	tst	counterI , #3
-	ble	dgemm_kernel_L2_END
+	ble	dtrmm_kernel_L2_END
 
 	tst	counterI, #2			// counterI = counterI / 2
-	ble	dgemm_kernel_L2_M1_BEGIN
+	ble	dtrmm_kernel_L2_M1_BEGIN
 
-dgemm_kernel_L2_M2_20:
+dtrmm_kernel_L2_M2_20:
 
 	INIT2x2
 
+#if (defined(LEFT) &&  defined(TRANSA)) || (!defined(LEFT) && !defined(TRANSA))
 	mov	pB, origPB
+#else
+	mov	pB, origPB
+	lsl	temp, tempOffset, #4
+	add	pB, pB, temp
+	lsl	temp, tempOffset, #4
+	add	pA, pA, temp
+#endif
 
-	asr	counterL , origK, #3		// counterL = counterL / 8
+#if (defined(LEFT) && !defined(TRANSA)) || (!defined(LEFT) && defined(TRANSA))
+	sub	tempK, origK, tempOffset
+#elif defined(LEFT)
+	add	tempK, tempOffset, #2
+#else
+	add	tempK, tempOffset, #2
+#endif
+	asr	counterL , tempK, #3		// counterL = counterL / 8
         cmp	counterL,#0
-	ble	dgemm_kernel_L2_M2_40
+	ble	dtrmm_kernel_L2_M2_40
 
-dgemm_kernel_L2_M2_22:
+dtrmm_kernel_L2_M2_22:
 
 	KERNEL2x2_SUB
 	KERNEL2x2_SUB
@@ -1426,44 +1637,74 @@ dgemm_kernel_L2_M2_22:
 	KERNEL2x2_SUB
 
 	subs	counterL, counterL, #1
-	bgt	dgemm_kernel_L2_M2_22
+	bgt	dtrmm_kernel_L2_M2_22
 
 
-dgemm_kernel_L2_M2_40:
+dtrmm_kernel_L2_M2_40:
 
-	ands	counterL , origK, #7		// counterL = counterL % 8
-	ble	dgemm_kernel_L2_M2_100
+	ands	counterL , tempK, #7		// counterL = counterL % 8
+	ble	dtrmm_kernel_L2_M2_100
 
-dgemm_kernel_L2_M2_42:
+dtrmm_kernel_L2_M2_42:
 
 	KERNEL2x2_SUB
 
 	subs	counterL, counterL, #1
-	bgt	dgemm_kernel_L2_M2_42
+	bgt	dtrmm_kernel_L2_M2_42
 
-dgemm_kernel_L2_M2_100:
+dtrmm_kernel_L2_M2_100:
 
 	SAVE2x2
 
-dgemm_kernel_L2_M2_END:
+#if (defined(LEFT) &&  defined(TRANSA)) || (!defined(LEFT) && !defined(TRANSA))
+	sub	tempK, origK, tempOffset
+#if defined(LEFT)
+	sub	tempK, tempK, #2
+#else
+	sub	tempK, tempK, #2
+#endif
+	lsl	temp, tempK, #4
+	add	pA, pA, temp
+	lsl	temp, tempK, #4
+	add	pB, pB, temp
+#endif
+#if defined(LEFT)
+	add	tempOffset, tempOffset, #2
+#endif
+dtrmm_kernel_L2_M2_END:
 
 
-dgemm_kernel_L2_M1_BEGIN:
+dtrmm_kernel_L2_M1_BEGIN:
 
 	tst	counterI, #1			// counterI = counterI % 2
-	ble	dgemm_kernel_L2_END
+	ble	dtrmm_kernel_L2_END
 
-dgemm_kernel_L2_M1_20:
+dtrmm_kernel_L2_M1_20:
 
 	INIT1x2
 
+#if (defined(LEFT) &&  defined(TRANSA)) || (!defined(LEFT) && !defined(TRANSA))
 	mov	pB, origPB
+#else
+	mov	pB, origPB
+	lsl	temp, tempOffset, #4
+	add	pB, pB, temp
+	lsl	temp, tempOffset, #3
+	add	pA, pA, temp
+#endif
 
-	asr 	counterL , origK, #3		// counterL = counterL / 8
+#if (defined(LEFT) && !defined(TRANSA)) || (!defined(LEFT) && defined(TRANSA))
+	sub	tempK, origK, tempOffset
+#elif defined(LEFT)
+	add	tempK, tempOffset, #1
+#else
+	add	tempK, tempOffset, #2
+#endif
+	asr 	counterL , tempK, #3		// counterL = counterL / 8
         cmp     counterL, #0
-	ble	dgemm_kernel_L2_M1_40
+	ble	dtrmm_kernel_L2_M1_40
 
-dgemm_kernel_L2_M1_22:
+dtrmm_kernel_L2_M1_22:
 	KERNEL1x2_SUB
 	KERNEL1x2_SUB
 	KERNEL1x2_SUB
@@ -1475,60 +1716,96 @@ dgemm_kernel_L2_M1_22:
 	KERNEL1x2_SUB
 
 	subs	counterL, counterL, #1
-	bgt	dgemm_kernel_L2_M1_22
+	bgt	dtrmm_kernel_L2_M1_22
 
 
-dgemm_kernel_L2_M1_40:
+dtrmm_kernel_L2_M1_40:
 
-	ands	counterL , origK, #7		// counterL = counterL % 8
-	ble	dgemm_kernel_L2_M1_100
+	ands	counterL , tempK, #7		// counterL = counterL % 8
+	ble	dtrmm_kernel_L2_M1_100
 
-dgemm_kernel_L2_M1_42:
+dtrmm_kernel_L2_M1_42:
 
 	KERNEL1x2_SUB
 
 	subs	counterL, counterL, #1
-	bgt	dgemm_kernel_L2_M1_42
+	bgt	dtrmm_kernel_L2_M1_42
 
-dgemm_kernel_L2_M1_100:
+dtrmm_kernel_L2_M1_100:
 
 	SAVE1x2
 
-dgemm_kernel_L2_END:
+#if (defined(LEFT) &&  defined(TRANSA)) || (!defined(LEFT) && !defined(TRANSA))
+	sub	tempK, origK, tempOffset
+#if defined(LEFT)
+	sub	tempK, tempK, #1
+#else
+	sub	tempK, tempK, #2
+#endif
+	lsl	temp, tempK, #3
+	add	pA, pA, temp
+	lsl	temp, tempK, #4
+	add	pB, pB, temp
+#endif
+#if defined(LEFT)
+	add	tempOffset, tempOffset, #1
+#endif
+dtrmm_kernel_L2_END:
+#if !defined(LEFT)
+	add	tempOffset, tempOffset, #2
+#endif
 	add	origPB, origPB, origK, lsl #4	// B = B + K * 2 * 8
 
 /******************************************************************************/
 
-dgemm_kernel_L1_BEGIN:
+dtrmm_kernel_L1_BEGIN:
 
 	mov	counterJ , origN
 	tst	counterJ , #1
-	ble	dgemm_kernel_L999 // done
+	ble	dtrmm_kernel_L999 // done
 
 
 	mov	pCRow0, pC			// pCRow0 = C
 	add	pC , pC , LDC			// Update pC to point to next
 
+#if defined(LEFT)
+	mov	tempOffset, offset
+#endif
 	mov	pA, origPA			// pA = A
 
-dgemm_kernel_L1_M4_BEGIN:
+dtrmm_kernel_L1_M4_BEGIN:
 
 	mov	counterI, origM
 	asr 	counterI, counterI, #2		// counterI = counterI / 4
 	cmp	counterI, #0
-	ble	dgemm_kernel_L1_M2_BEGIN
+	ble	dtrmm_kernel_L1_M2_BEGIN
 
-dgemm_kernel_L1_M4_20:
+dtrmm_kernel_L1_M4_20:
 
 	INIT4x1
 
+#if (defined(LEFT) &&  defined(TRANSA)) || (!defined(LEFT) && !defined(TRANSA))
 	mov	pB, origPB
-	asr	counterL , origK, #3		// counterL = counterL / 8
+#else
+	mov	pB, origPB
+	lsl	temp, tempOffset, #3
+	add	pB, pB, temp
+	lsl	temp, tempOffset, #5
+	add	pA, pA, temp
+#endif
+#if (defined(LEFT) && !defined(TRANSA)) || (!defined(LEFT) && defined(TRANSA))
+	sub	tempK, origK, tempOffset
+#elif defined(LEFT)
+	add	tempK, tempOffset, #4
+#else
+	add	tempK, tempOffset, #1
+#endif
+	asr	counterL , tempK, #3		// counterL = counterL / 8
 	cmp	counterL , #0
-	ble	dgemm_kernel_L1_M4_40
+	ble	dtrmm_kernel_L1_M4_40
 	.align 5
 
-dgemm_kernel_L1_M4_22:
+dtrmm_kernel_L1_M4_22:
 	KERNEL4x1_SUB
 	KERNEL4x1_SUB
 	KERNEL4x1_SUB
@@ -1540,51 +1817,81 @@ dgemm_kernel_L1_M4_22:
 	KERNEL4x1_SUB
 
 	subs	counterL, counterL, #1
-	bgt	dgemm_kernel_L1_M4_22
+	bgt	dtrmm_kernel_L1_M4_22
 
 
-dgemm_kernel_L1_M4_40:
+dtrmm_kernel_L1_M4_40:
 
-	ands	counterL , origK, #7		// counterL = counterL % 8
-	ble	dgemm_kernel_L1_M4_100
+	ands	counterL , tempK, #7		// counterL = counterL % 8
+	ble	dtrmm_kernel_L1_M4_100
 
-dgemm_kernel_L1_M4_42:
+dtrmm_kernel_L1_M4_42:
 
 	KERNEL4x1_SUB
 
 	subs	counterL, counterL, #1
-	bgt	dgemm_kernel_L1_M4_42
+	bgt	dtrmm_kernel_L1_M4_42
 
-dgemm_kernel_L1_M4_100:
+dtrmm_kernel_L1_M4_100:
 
 	SAVE4x1
+#if (defined(LEFT) &&  defined(TRANSA)) || (!defined(LEFT) && !defined(TRANSA))
+	sub	tempK, origK, tempOffset
+#if defined(LEFT)
+	sub	tempK, tempK, #4
+#else
+	sub	tempK, tempK, #1
+#endif
+	lsl	temp, tempK, #5
+	add	pA, pA, temp
+	lsl	temp, tempK, #3
+	add	pB, pB, temp
+#endif
+#if defined(LEFT)
+	add	tempOffset, tempOffset, #4
+#endif
 
-dgemm_kernel_L1_M4_END:
+dtrmm_kernel_L1_M4_END:
 
 	subs	counterI, counterI, #1
-	bgt	dgemm_kernel_L1_M4_20
+	bgt	dtrmm_kernel_L1_M4_20
 
 
-dgemm_kernel_L1_M2_BEGIN:
+dtrmm_kernel_L1_M2_BEGIN:
 
 	mov	counterI, origM
 	tst	counterI , #3
-	ble	dgemm_kernel_L1_END
+	ble	dtrmm_kernel_L1_END
 
 	tst	counterI, #2			// counterI = counterI / 2
-	ble	dgemm_kernel_L1_M1_BEGIN
+	ble	dtrmm_kernel_L1_M1_BEGIN
 
-dgemm_kernel_L1_M2_20:
+dtrmm_kernel_L1_M2_20:
 
 	INIT2x1
 
+#if (defined(LEFT) &&  defined(TRANSA)) || (!defined(LEFT) && !defined(TRANSA))
 	mov	pB, origPB
+#else
+	mov	pB, origPB
+	lsl	temp, tempOffset, #3
+	add	pB, pB, temp
+	lsl	temp, tempOffset, #4
+	add	pA, pA, temp
+#endif
 
-	asr 	counterL , origK, #3		// counterL = counterL / 8
+#if (defined(LEFT) && !defined(TRANSA)) || (!defined(LEFT) && defined(TRANSA))
+	sub	tempK, origK, tempOffset
+#elif defined(LEFT)
+	add	tempK, tempOffset, #2
+#else
+	add	tempK, tempOffset, #1
+#endif
+	asr 	counterL , tempK, #3		// counterL = counterL / 8
 	cmp	counterL , #0
-	ble	dgemm_kernel_L1_M2_40
+	ble	dtrmm_kernel_L1_M2_40
 
-dgemm_kernel_L1_M2_22:
+dtrmm_kernel_L1_M2_22:
 
 	KERNEL2x1_SUB
 	KERNEL2x1_SUB
@@ -1597,44 +1904,74 @@ dgemm_kernel_L1_M2_22:
 	KERNEL2x1_SUB
 
 	subs	counterL, counterL, #1
-	bgt	dgemm_kernel_L1_M2_22
+	bgt	dtrmm_kernel_L1_M2_22
 
 
-dgemm_kernel_L1_M2_40:
+dtrmm_kernel_L1_M2_40:
 
-	ands	counterL , origK, #7		// counterL = counterL % 8
-	ble	dgemm_kernel_L1_M2_100
+	ands	counterL , tempK, #7		// counterL = counterL % 8
+	ble	dtrmm_kernel_L1_M2_100
 
-dgemm_kernel_L1_M2_42:
+dtrmm_kernel_L1_M2_42:
 
 	KERNEL2x1_SUB
 
 	subs	counterL, counterL, #1
-	bgt	dgemm_kernel_L1_M2_42
+	bgt	dtrmm_kernel_L1_M2_42
 
-dgemm_kernel_L1_M2_100:
+dtrmm_kernel_L1_M2_100:
 
 	SAVE2x1
 
-dgemm_kernel_L1_M2_END:
+#if (defined(LEFT) &&  defined(TRANSA)) || (!defined(LEFT) && !defined(TRANSA))
+	sub	tempK, origK, tempOffset
+#if defined(LEFT)
+	sub	tempK, tempK, #2
+#else
+	sub	tempK, tempK, #1
+#endif
+	lsl	temp, tempK, #4
+	add	pA, pA, temp
+	lsl	temp, tempK, #3
+	add	pB, pB, temp
+#endif
+#if defined(LEFT)
+	add	tempOffset, tempOffset, #2
+#endif
+dtrmm_kernel_L1_M2_END:
 
 
-dgemm_kernel_L1_M1_BEGIN:
+dtrmm_kernel_L1_M1_BEGIN:
 
 	tst	counterI, #1			// counterI = counterI % 2
-	ble	dgemm_kernel_L1_END
+	ble	dtrmm_kernel_L1_END
 
-dgemm_kernel_L1_M1_20:
+dtrmm_kernel_L1_M1_20:
 
 	INIT1x1
 
+#if (defined(LEFT) &&  defined(TRANSA)) || (!defined(LEFT) && !defined(TRANSA))
 	mov	pB, origPB
+#else
+	mov	pB, origPB
+	lsl	temp, tempOffset, #3
+	add	pB, pB, temp
+	lsl	temp, tempOffset, #3
+	add	pA, pA, temp
+#endif
 
-	asr 	counterL , origK, #3		// counterL = counterL / 8
+#if (defined(LEFT) && !defined(TRANSA)) || (!defined(LEFT) && defined(TRANSA))
+	sub	tempK, origK, tempOffset
+#elif defined(LEFT)
+	add	tempK, tempOffset, #1
+#else
+	add	tempK, tempOffset, #1
+#endif
+	asr 	counterL , tempK, #3		// counterL = counterL / 8
 	cmp	counterL , #0
-	ble	dgemm_kernel_L1_M1_40
+	ble	dtrmm_kernel_L1_M1_40
 
-dgemm_kernel_L1_M1_22:
+dtrmm_kernel_L1_M1_22:
 	KERNEL1x1_SUB
 	KERNEL1x1_SUB
 	KERNEL1x1_SUB
@@ -1646,30 +1983,30 @@ dgemm_kernel_L1_M1_22:
 	KERNEL1x1_SUB
 
 	subs	counterL, counterL, #1
-	bgt	dgemm_kernel_L1_M1_22
+	bgt	dtrmm_kernel_L1_M1_22
 
 
-dgemm_kernel_L1_M1_40:
+dtrmm_kernel_L1_M1_40:
 
-	ands	counterL , origK, #7		// counterL = counterL % 8
-	ble	dgemm_kernel_L1_M1_100
+	ands	counterL , tempK, #7		// counterL = counterL % 8
+	ble	dtrmm_kernel_L1_M1_100
 
-dgemm_kernel_L1_M1_42:
+dtrmm_kernel_L1_M1_42:
 
 	KERNEL1x1_SUB
 
 	subs	counterL, counterL, #1
-	bgt	dgemm_kernel_L1_M1_42
+	bgt	dtrmm_kernel_L1_M1_42
 
-dgemm_kernel_L1_M1_100:
+dtrmm_kernel_L1_M1_100:
 
 	SAVE1x1
 
 
-dgemm_kernel_L1_END:
+dtrmm_kernel_L1_END:
 
 
-dgemm_kernel_L999:
+dtrmm_kernel_L999:
 	mov	x0, #0				// set return value
 	ldp	d8, d9, [sp, #(0 * 16)]
 	ldp	d10, d11, [sp, #(1 * 16)]
