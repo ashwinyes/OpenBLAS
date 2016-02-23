@@ -74,10 +74,10 @@ ifeq ($(USE_OPENMP), 1)
 	OMP_NUM_THREADS=2 ./xccblat3 < cin3
 	OMP_NUM_THREADS=2 ./xzcblat3 < zin3
 else
-	$(QEMU_RUN) ./xscblat3 < sin3
-	$(QEMU_RUN) ./xdcblat3 < din3
-	$(QEMU_RUN) ./xccblat3 < cin3
-	$(QEMU_RUN) ./xzcblat3 < zin3
+	#$(QEMU_RUN) ./xscblat3 < sin3
+	#$(QEMU_RUN) ./xdcblat3 < din3
+	#$(QEMU_RUN) ./xccblat3 < cin3
+	#$(QEMU_RUN) ./xzcblat3 < zin3
 endif
 
 all3_3m: xzcblat3_3m xccblat3_3m
