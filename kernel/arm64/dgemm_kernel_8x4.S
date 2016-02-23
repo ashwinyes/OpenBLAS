@@ -346,6 +346,88 @@ USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 	fmov		d29, d16
 .endm
 
+.macro KERNEL4x4_I
+	ld1	{v8.2d, v9.2d}, [pB]
+	add	pB, pB, #32
+	ld1	{v0.2d, v1.2d}, [pA]
+	add	pA, pA, #32
+
+	fmul	v16.2d, v0.2d, v8.2d[0]
+	fmul	v29.2d, v1.2d, v9.2d[1]
+
+	fmul	v20.2d, v0.2d, v8.2d[1]
+	fmul	v25.2d, v1.2d, v9.2d[0]
+
+	fmul	v24.2d, v0.2d, v9.2d[0]
+	fmul	v21.2d, v1.2d, v8.2d[1]
+
+	fmul	v28.2d, v0.2d, v9.2d[1]
+	fmul	v17.2d, v1.2d, v8.2d[0]
+
+	ld1	{v12.2d, v13.2d}, [pB]
+	add	pB, pB, #32
+	ld1	{v4.2d, v5.2d}, [pA]
+	add	pA, pA, #32
+.endm
+
+.macro KERNEL4x4_M1
+	fmla	v16.2d, v0.2d, v8.2d[0]
+	fmla	v29.2d, v1.2d, v9.2d[1]
+
+	ld1	{v12.2d, v13.2d}, [pB]		// For next round
+	add	pB, pB, #32
+
+	fmla	v20.2d, v0.2d, v8.2d[1]
+	fmla	v25.2d, v1.2d, v9.2d[0]
+
+	ld1	{v4.2d, v5.2d}, [pA]		// For next round
+	add	pA, pA, #32
+
+	fmla	v24.2d, v0.2d, v9.2d[0]
+	fmla	v21.2d, v1.2d, v8.2d[1]
+
+	prfm	PLDL1KEEP, [pA, #512]
+
+	fmla	v28.2d, v0.2d, v9.2d[1]
+	fmla	v17.2d, v1.2d, v8.2d[0]
+.endm
+
+.macro KERNEL4x4_M2
+	fmla	v16.2d, v4.2d, v12.2d[0]
+	fmla	v29.2d, v5.2d, v13.2d[1]
+
+	ld1	{v8.2d, v9.2d}, [pB]		// For next round
+	add	pB, pB, #32
+
+	fmla	v20.2d, v4.2d, v12.2d[1]
+	fmla	v25.2d, v5.2d, v13.2d[0]
+
+	ld1	{v0.2d, v1.2d}, [pA]		// For next round
+	add	pA, pA, #32
+
+	fmla	v24.2d, v4.2d, v13.2d[0]
+	fmla	v21.2d, v5.2d, v12.2d[1]
+
+	prfm	PLDL1KEEP, [pB, #512]
+
+	fmla	v28.2d, v4.2d, v13.2d[1]
+	fmla	v17.2d, v5.2d, v12.2d[0]
+.endm
+
+.macro KERNEL4x4_E
+	fmla	v16.2d, v4.2d, v12.2d[0]
+	fmla	v29.2d, v5.2d, v13.2d[1]
+
+	fmla	v20.2d, v4.2d, v12.2d[1]
+	fmla	v25.2d, v5.2d, v13.2d[0]
+
+	fmla	v24.2d, v4.2d, v13.2d[0]
+	fmla	v21.2d, v5.2d, v12.2d[1]
+
+	fmla	v28.2d, v4.2d, v13.2d[1]
+	fmla	v17.2d, v5.2d, v12.2d[0]
+.endm
+
 .macro KERNEL4x4_SUB
 	ld1	{v8.2d, v9.2d}, [pB]
 	add	pB, pB, #32
@@ -394,7 +476,6 @@ USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 	add	pCRow0, pCRow0, #32
 .endm
-
 /******************************************************************************/
 
 
@@ -867,41 +948,59 @@ dgemm_kernel_L4_M4_BEGIN:
 
 dgemm_kernel_L4_M4_20:
 
-	INIT4x4
-
 	mov	pB, origPB
 
-	asr 	counterL , origK, #3		// counterL = counterL / 8
-	cmp	counterL , #0
-	ble	dgemm_kernel_L4_M4_40
+	asr 	counterL , origK, #1		// L = K / 2
+	cmp	counterL , #2			// is there at least 4 to do?
+	blt	dgemm_kernel_L4_M4_32
+
+	KERNEL4x4_I				// do one in the K
+	KERNEL4x4_M2				// do another in the K
+
+	subs	counterL, counterL, #2
+	ble	dgemm_kernel_L4_M4_22a
+	.align 5
 
 dgemm_kernel_L4_M4_22:
 
-	KERNEL4x4_SUB
-	KERNEL4x4_SUB
-	KERNEL4x4_SUB
-	KERNEL4x4_SUB
-
-	KERNEL4x4_SUB
-	KERNEL4x4_SUB
-	KERNEL4x4_SUB
-	KERNEL4x4_SUB
+	KERNEL4x4_M1
+	KERNEL4x4_M2
 
 	subs	counterL, counterL, #1
 	bgt	dgemm_kernel_L4_M4_22
 
 
+dgemm_kernel_L4_M4_22a:
+
+	KERNEL4x4_M1
+	KERNEL4x4_E
+
+	b	 dgemm_kernel_L4_M4_44
+
+dgemm_kernel_L4_M4_32:
+
+	tst	counterL, #1
+	ble	dgemm_kernel_L4_M4_40
+
+	KERNEL4x4_I
+
+	KERNEL4x4_E 
+
+	b	dgemm_kernel_L4_M4_44
+
+
 dgemm_kernel_L4_M4_40:
 
-	ands	counterL , origK, #7		// counterL = counterL % 8
+	INIT4x4
+
+dgemm_kernel_L4_M4_44:
+
+	ands	counterL , origK, #1
 	ble	dgemm_kernel_L4_M4_100
 
-dgemm_kernel_L4_M4_42:
+dgemm_kernel_L4_M4_46:
 
 	KERNEL4x4_SUB
-
-	subs	counterL, counterL, #1
-	bgt	dgemm_kernel_L4_M4_42
 
 dgemm_kernel_L4_M4_100:
 
