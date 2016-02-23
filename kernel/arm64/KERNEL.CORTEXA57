@@ -75,10 +75,6 @@ DGEMMINCOPY    =  ../generic/gemm_ncopy_8.c
 DGEMMITCOPY    =  ../generic/gemm_tcopy_8.c
 DGEMMONCOPY    =  ../generic/gemm_ncopy_4.c
 DGEMMOTCOPY    =  ../generic/gemm_tcopy_4.c
-DGEMMINCOPYOBJ =  dgemm_incopy.o
-DGEMMITCOPYOBJ =  dgemm_itcopy.o
-DGEMMONCOPYOBJ =  dgemm_oncopy.o
-DGEMMOTCOPYOBJ =  dgemm_otcopy.o
 
 # 4x8 Kernels for DGEMM, DTRMM
 #DGEMMKERNEL    =  dgemm_kernel_4x8.S
@@ -87,18 +83,18 @@ DGEMMOTCOPYOBJ =  dgemm_otcopy.o
 #DGEMMITCOPY    =  ../generic/gemm_tcopy_4.c
 #DGEMMONCOPY    =  ../generic/gemm_ncopy_8.c
 #DGEMMOTCOPY    =  ../generic/gemm_tcopy_8.c
-#DGEMMINCOPYOBJ =  dgemm_incopy.o
-#DGEMMITCOPYOBJ =  dgemm_itcopy.o
-#DGEMMONCOPYOBJ =  dgemm_oncopy.o
-#DGEMMOTCOPYOBJ =  dgemm_otcopy.o
 
 # 4x4 Kernels for DGEMM, DTRMM
 #DGEMMKERNEL    =  dgemm_kernel_4x4.S
+#DGEMMKERNEL    =  dgemm_kernel_4x4_raw.S
 #DTRMMKERNEL    =  dtrmm_kernel_4x4.S
 #DGEMMONCOPY    =  ../generic/gemm_ncopy_4.c
 #DGEMMOTCOPY    =  ../generic/gemm_tcopy_4.c
-#DGEMMONCOPYOBJ =  dgemm_oncopy.o
-#DGEMMOTCOPYOBJ =  dgemm_otcopy.o
+
+DGEMMINCOPYOBJ =  dgemm_incopy.o
+DGEMMITCOPYOBJ =  dgemm_itcopy.o
+DGEMMONCOPYOBJ =  dgemm_oncopy.o
+DGEMMOTCOPYOBJ =  dgemm_otcopy.o
 
 # 4x4 Kernels for CGEMM, CTRMM
 CGEMMKERNEL    =  cgemm_kernel_4x4.S
