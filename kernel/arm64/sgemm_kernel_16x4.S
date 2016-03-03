@@ -38,7 +38,7 @@ USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #define origPB		x4
 #define pC		x5
 #define LDC		x6
-#define offset		x7
+#define temp		x7
 #define counterL	x8
 #define counterI	x9
 #define counterJ	x10
@@ -47,7 +47,6 @@ USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #define pCRow1		x13
 #define pCRow2		x14
 #define pA		x15
-#define temp		x16
 
 #define alpha0		s10
 #define alphaV0		v10.s[0]
@@ -91,14 +90,14 @@ USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 // 30 link
 // 31 sp
 
-//v00 ALPHA -> pA00, pA01
-//v01 pA02, pA03
-//v02
-//v03
-//v04 pA10, pA11
-//v05 pA12, pA13
-//v06
-//v07
+//v00 ALPHA -> pA0_00, pA0_01, pA0_02, pA0_03
+//v01 pA0_04, pA0_05, pA0_06, pA0_07
+//v02 pA0_08, pA0_09, pA0_10, pA0_11
+//v03 pA0_12, pA0_13, pA0_14, pA0_15
+//v04 pA1_00, pA1_01, pA1_02, pA1_03
+//v05 pA1_04, pA1_05, pA1_06, pA1_07
+//v06 pA1_08, pA1_09, pA1_10, pA1_11
+//v07 pA1_12, pA1_13, pA1_14, pA1_15
 //v08 must save pB00, pB01
 //v09 must save pB02, pB03
 //v10 must save ALPHA0
@@ -107,26 +106,383 @@ USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 //v13 must save pB12, pB13
 //v14 must save ALPHA2
 //v15 must save ALPHA3
-//v16 must save C00, C01
-//v17 must save C02, C03
-//v18
-//v19
-//v20 C10, C11
-//v21 C12, C13
-//v22
-//v23
-//v24 C20, C21
-//v25 C22, C23
-//v26
-//v27
-//v28 C30, C31
-//v29 C32, C33
-//v30
-//v31
+//v16 must save C00, C01, C02, C03
+//v17 must save C04, C05, C06, C07
+//v18 C08, C09, C10, C11
+//v19 C12, C13, C14, C15
+//v20 C16, C17, C18, C19
+//v21 C20, C21, C22, C23
+//v22 C24, C25, C26, C27
+//v23 C28, C29, C30, C31
+//v24 C32, C33, C34, C35
+//v25 C36, C37, C38, C39
+//v26 C40, C41, C42, C43
+//v27 C44, C45, C46, C47
+//v28 C48, C49, C50, C51
+//v29 C52, C53, C54, C55
+//v30 C56, C57, C58, C59
+//v31 C60, C61, C62, C63
 
 /*******************************************************************************
 * Macro definitions
 *******************************************************************************/
+
+.macro INIT16x4
+	fmov		s16, wzr
+	fmov		s17, wzr
+	fmov		s18, s16
+	fmov		s19, s17
+	fmov		s20, wzr
+	fmov		s21, s16
+	fmov		s22, s17
+	fmov		s23, s18
+	fmov		s24, wzr
+	fmov		s25, s16
+	fmov		s26, s17
+	fmov		s27, s18
+	fmov		s28, wzr
+	fmov		s29, s16
+	fmov		s30, s17
+	fmov		s31, s18
+.endm
+
+.macro KERNEL16x4_I
+	ld1	{v8.2s, v9.2s}, [pB]
+	add	pB, pB, #16
+	ld1	{v0.4s}, [pA]
+	add	pA, pA, #16
+	ld1	{v1.4s}, [pA]
+	add	pA, pA, #16
+	ld1	{v2.4s}, [pA]
+	add	pA, pA, #16
+	ld1	{v3.4s}, [pA]
+	add	pA, pA, #16
+
+	fmul	v16.4s, v0.4s, v8.2s[0]
+	fmul	v17.4s, v1.4s, v8.2s[0]
+	fmul	v18.4s, v2.4s, v8.2s[0]
+	fmul	v19.4s, v3.4s, v8.2s[0]
+
+	fmul	v20.4s, v0.4s, v8.2s[1]
+	fmul	v21.4s, v1.4s, v8.2s[1]
+	fmul	v22.4s, v2.4s, v8.2s[1]
+	fmul	v23.4s, v3.4s, v8.2s[1]
+
+	fmul	v24.4s, v0.4s, v9.2s[0]
+	fmul	v25.4s, v1.4s, v9.2s[0]
+	fmul	v26.4s, v2.4s, v9.2s[0]
+	fmul	v27.4s, v3.4s, v9.2s[0]
+
+	fmul	v28.4s, v0.4s, v9.2s[1]
+	fmul	v29.4s, v1.4s, v9.2s[1]
+	fmul	v30.4s, v2.4s, v9.2s[1]
+	fmul	v31.4s, v3.4s, v9.2s[1]
+
+	ld1	{v12.2s, v13.2s}, [pB]
+	add	pB, pB, #16
+	ld1	{v4.4s}, [pA]
+	add	pA, pA, #16
+	ld1	{v5.4s}, [pA]
+	add	pA, pA, #16
+	ld1	{v6.4s}, [pA]
+	add	pA, pA, #16
+	ld1	{v7.4s}, [pA]
+	add	pA, pA, #16
+.endm
+
+.macro KERNEL16x4_M1
+	fmla	v16.4s, v0.4s, v8.2s[0]
+	fmla	v17.4s, v1.4s, v8.2s[0]
+	fmla	v18.4s, v2.4s, v8.2s[0]
+	fmla	v19.4s, v3.4s, v8.2s[0]
+
+	fmla	v20.4s, v0.4s, v8.2s[1]
+	fmla	v21.4s, v1.4s, v8.2s[1]
+	fmla	v22.4s, v2.4s, v8.2s[1]
+	fmla	v23.4s, v3.4s, v8.2s[1]
+
+	fmla	v24.4s, v0.4s, v9.2s[0]
+	fmla	v25.4s, v1.4s, v9.2s[0]
+	fmla	v26.4s, v2.4s, v9.2s[0]
+	fmla	v27.4s, v3.4s, v9.2s[0]
+
+	fmla	v28.4s, v0.4s, v9.2s[1]
+	fmla	v29.4s, v1.4s, v9.2s[1]
+	fmla	v30.4s, v2.4s, v9.2s[1]
+	fmla	v31.4s, v3.4s, v9.2s[1]
+
+	ld1	{v12.2s, v13.2s}, [pB]
+	add	pB, pB, #16
+	ld1	{v4.4s}, [pA]
+	add	pA, pA, #16
+	ld1	{v5.4s}, [pA]
+	add	pA, pA, #16
+	ld1	{v6.4s}, [pA]
+	add	pA, pA, #16
+	ld1	{v7.4s}, [pA]
+	add	pA, pA, #16
+.endm
+
+.macro KERNEL16x4_M2
+	fmla	v16.4s, v4.4s, v12.2s[0]
+	fmla	v17.4s, v5.4s, v12.2s[0]
+	fmla	v18.4s, v6.4s, v12.2s[0]
+	fmla	v19.4s, v7.4s, v12.2s[0]
+
+	fmla	v20.4s, v4.4s, v12.2s[1]
+	fmla	v21.4s, v5.4s, v12.2s[1]
+	fmla	v22.4s, v6.4s, v12.2s[1]
+	fmla	v23.4s, v7.4s, v12.2s[1]
+
+	fmla	v24.4s, v4.4s, v13.2s[0]
+	fmla	v25.4s, v5.4s, v13.2s[0]
+	fmla	v26.4s, v6.4s, v13.2s[0]
+	fmla	v27.4s, v7.4s, v13.2s[0]
+
+	fmla	v28.4s, v4.4s, v13.2s[1]
+	fmla	v29.4s, v5.4s, v13.2s[1]
+	fmla	v30.4s, v6.4s, v13.2s[1]
+	fmla	v31.4s, v7.4s, v13.2s[1]
+
+	ld1	{v8.2s, v9.2s}, [pB]
+	add	pB, pB, #16
+	ld1	{v0.4s}, [pA]
+	add	pA, pA, #16
+	ld1	{v1.4s}, [pA]
+	add	pA, pA, #16
+	ld1	{v2.4s}, [pA]
+	add	pA, pA, #16
+	ld1	{v3.4s}, [pA]
+	add	pA, pA, #16
+.endm
+
+.macro KERNEL16x4_E
+	fmla	v16.4s, v4.4s, v12.2s[0]
+	fmla	v17.4s, v5.4s, v12.2s[0]
+	fmla	v18.4s, v6.4s, v12.2s[0]
+	fmla	v19.4s, v7.4s, v12.2s[0]
+
+	fmla	v20.4s, v4.4s, v12.2s[1]
+	fmla	v21.4s, v5.4s, v12.2s[1]
+	fmla	v22.4s, v6.4s, v12.2s[1]
+	fmla	v23.4s, v7.4s, v12.2s[1]
+
+	fmla	v24.4s, v4.4s, v13.2s[0]
+	fmla	v25.4s, v5.4s, v13.2s[0]
+	fmla	v26.4s, v6.4s, v13.2s[0]
+	fmla	v27.4s, v7.4s, v13.2s[0]
+
+	fmla	v28.4s, v4.4s, v13.2s[1]
+	fmla	v29.4s, v5.4s, v13.2s[1]
+	fmla	v30.4s, v6.4s, v13.2s[1]
+	fmla	v31.4s, v7.4s, v13.2s[1]
+.endm
+
+.macro KERNEL16x4_SUB
+	ld1	{v8.2s, v9.2s}, [pB]
+	add	pB, pB, #16
+	ld1	{v0.4s}, [pA]
+	add	pA, pA, #16
+	ld1	{v1.4s}, [pA]
+	add	pA, pA, #16
+	ld1	{v2.4s}, [pA]
+	add	pA, pA, #16
+	ld1	{v3.4s}, [pA]
+	add	pA, pA, #16
+
+	fmla	v16.4s, v0.4s, v8.2s[0]
+	fmla	v17.4s, v1.4s, v8.2s[0]
+	fmla	v18.4s, v2.4s, v8.2s[0]
+	fmla	v19.4s, v3.4s, v8.2s[0]
+
+	fmla	v20.4s, v0.4s, v8.2s[1]
+	fmla	v21.4s, v1.4s, v8.2s[1]
+	fmla	v22.4s, v2.4s, v8.2s[1]
+	fmla	v23.4s, v3.4s, v8.2s[1]
+
+	fmla	v24.4s, v0.4s, v9.2s[0]
+	fmla	v25.4s, v1.4s, v9.2s[0]
+	fmla	v26.4s, v2.4s, v9.2s[0]
+	fmla	v27.4s, v3.4s, v9.2s[0]
+
+	fmla	v28.4s, v0.4s, v9.2s[1]
+	fmla	v29.4s, v1.4s, v9.2s[1]
+	fmla	v30.4s, v2.4s, v9.2s[1]
+	fmla	v31.4s, v3.4s, v9.2s[1]
+.endm
+
+.macro SAVE16x4
+	add	pCRow1, pCRow0, LDC
+
+	ld1	{v0.4s, v1.4s, v2.4s, v3.4s}, [pCRow0]
+	fmla	v0.4s, v16.4s, alphaV0
+	fmla	v1.4s, v17.4s, alphaV1
+	fmla	v2.4s, v18.4s, alphaV2
+	fmla	v3.4s, v19.4s, alphaV3
+	st1 	{v0.4s, v1.4s, v2.4s, v3.4s}, [pCRow0]
+
+	add	pCRow2, pCRow1, LDC
+
+	ld1	{v4.4s, v5.4s, v6.4s, v7.4s}, [pCRow1]
+	fmla	v4.4s, v20.4s, alphaV0
+	fmla	v5.4s, v21.4s, alphaV1
+	fmla	v6.4s, v22.4s, alphaV2
+	fmla	v7.4s, v23.4s, alphaV3
+	st1 	{v4.4s, v5.4s, v6.4s, v7.4s}, [pCRow1]
+
+	add	pCRow1, pCRow2, LDC
+
+	ld1	{v0.4s, v1.4s, v2.4s, v3.4s}, [pCRow2]
+	fmla	v0.4s, v24.4s, alphaV0
+	fmla	v1.4s, v25.4s, alphaV1
+	fmla	v2.4s, v26.4s, alphaV2
+	fmla	v3.4s, v27.4s, alphaV3
+	st1 	{v0.4s, v1.4s, v2.4s, v3.4s}, [pCRow2]
+
+	ld1	{v4.4s, v5.4s, v6.4s, v7.4s}, [pCRow1]
+	fmla	v4.4s, v28.4s, alphaV0
+	fmla	v5.4s, v29.4s, alphaV1
+	fmla	v6.4s, v30.4s, alphaV2
+	fmla	v7.4s, v31.4s, alphaV3
+	st1 	{v4.4s, v5.4s, v6.4s, v7.4s}, [pCRow1]
+
+	add	pCRow0, pCRow0, #64
+.endm
+
+/******************************************************************************/
+
+.macro INIT8x4
+	fmov		s16, wzr
+	fmov		s17, wzr
+	fmov		s20, wzr
+	fmov		s21, s16
+	fmov		s24, wzr
+	fmov		s25, s16
+	fmov		s28, wzr
+	fmov		s29, s16
+.endm
+
+.macro KERNEL8x4_I
+	ld1	{v8.2s, v9.2s}, [pB]
+	add	pB, pB, #16
+	ld1	{v0.4s}, [pA]
+	add	pA, pA, #16
+	ld1	{v1.4s}, [pA]
+	add	pA, pA, #16
+
+	fmul	v16.4s, v0.4s, v8.2s[0]
+	fmul	v17.4s, v1.4s, v8.2s[0]
+	fmul	v20.4s, v0.4s, v8.2s[1]
+	fmul	v21.4s, v1.4s, v8.2s[1]
+	fmul	v24.4s, v0.4s, v9.2s[0]
+	fmul	v25.4s, v1.4s, v9.2s[0]
+	fmul	v28.4s, v0.4s, v9.2s[1]
+	fmul	v29.4s, v1.4s, v9.2s[1]
+
+	ld1	{v12.2s, v13.2s}, [pB]
+	add	pB, pB, #16
+	ld1	{v4.4s}, [pA]
+	add	pA, pA, #16
+	ld1	{v5.4s}, [pA]
+	add	pA, pA, #16
+.endm
+
+.macro KERNEL8x4_M1
+	fmla	v16.4s, v0.4s, v8.2s[0]
+	fmla	v17.4s, v1.4s, v8.2s[0]
+	fmla	v20.4s, v0.4s, v8.2s[1]
+	fmla	v21.4s, v1.4s, v8.2s[1]
+	fmla	v24.4s, v0.4s, v9.2s[0]
+	fmla	v25.4s, v1.4s, v9.2s[0]
+	fmla	v28.4s, v0.4s, v9.2s[1]
+	fmla	v29.4s, v1.4s, v9.2s[1]
+
+	ld1	{v12.2s, v13.2s}, [pB]
+	add	pB, pB, #16
+	ld1	{v4.4s}, [pA]
+	add	pA, pA, #16
+	ld1	{v5.4s}, [pA]
+	add	pA, pA, #16
+.endm
+
+.macro KERNEL8x4_M2
+	fmla	v16.4s, v4.4s, v12.2s[0]
+	fmla	v17.4s, v5.4s, v12.2s[0]
+	fmla	v20.4s, v4.4s, v12.2s[1]
+	fmla	v21.4s, v5.4s, v12.2s[1]
+	fmla	v24.4s, v4.4s, v13.2s[0]
+	fmla	v25.4s, v5.4s, v13.2s[0]
+	fmla	v28.4s, v4.4s, v13.2s[1]
+	fmla	v29.4s, v5.4s, v13.2s[1]
+
+	ld1	{v8.2s, v9.2s}, [pB]
+	add	pB, pB, #16
+	ld1	{v0.4s}, [pA]
+	add	pA, pA, #16
+	ld1	{v1.4s}, [pA]
+	add	pA, pA, #16
+.endm
+
+.macro KERNEL8x4_E
+	fmla	v16.4s, v4.4s, v12.2s[0]
+	fmla	v17.4s, v5.4s, v12.2s[0]
+	fmla	v20.4s, v4.4s, v12.2s[1]
+	fmla	v21.4s, v5.4s, v12.2s[1]
+	fmla	v24.4s, v4.4s, v13.2s[0]
+	fmla	v25.4s, v5.4s, v13.2s[0]
+	fmla	v28.4s, v4.4s, v13.2s[1]
+	fmla	v29.4s, v5.4s, v13.2s[1]
+.endm
+
+.macro KERNEL8x4_SUB
+	ld1	{v8.2s, v9.2s}, [pB]
+	add	pB, pB, #16
+	ld1	{v0.4s}, [pA]
+	add	pA, pA, #16
+	ld1	{v1.4s}, [pA]
+	add	pA, pA, #16
+
+	fmla	v16.4s, v0.4s, v8.2s[0]
+	fmla	v17.4s, v1.4s, v8.2s[0]
+	fmla	v20.4s, v0.4s, v8.2s[1]
+	fmla	v21.4s, v1.4s, v8.2s[1]
+	fmla	v24.4s, v0.4s, v9.2s[0]
+	fmla	v25.4s, v1.4s, v9.2s[0]
+	fmla	v28.4s, v0.4s, v9.2s[1]
+	fmla	v29.4s, v1.4s, v9.2s[1]
+.endm
+
+.macro SAVE8x4
+	add	pCRow1, pCRow0, LDC
+
+	ld1	{v0.4s, v1.4s}, [pCRow0]
+	fmla	v0.4s, v16.4s, alphaV0
+	fmla	v1.4s, v17.4s, alphaV1
+	st1 	{v0.4s, v1.4s}, [pCRow0]
+
+	add	pCRow2, pCRow1, LDC
+
+	ld1	{v4.4s, v5.4s}, [pCRow1]
+	fmla	v4.4s, v20.4s, alphaV0
+	fmla	v5.4s, v21.4s, alphaV1
+	st1 	{v4.4s, v5.4s}, [pCRow1]
+
+	add	pCRow1, pCRow2, LDC
+
+	ld1	{v0.4s, v1.4s}, [pCRow2]
+	fmla	v0.4s, v24.4s, alphaV0
+	fmla	v1.4s, v25.4s, alphaV1
+	st1 	{v0.4s, v1.4s}, [pCRow2]
+
+	ld1	{v4.4s, v5.4s}, [pCRow1]
+	fmla	v4.4s, v28.4s, alphaV0
+	fmla	v5.4s, v29.4s, alphaV1
+	st1 	{v4.4s, v5.4s}, [pCRow1]
+
+	add	pCRow0, pCRow0, #32
+.endm
+
+/******************************************************************************/
 
 .macro INIT4x4
 	fmov		s16, wzr
@@ -350,6 +706,104 @@ USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 /******************************************************************************/
 
+.macro INIT16x2
+	fmov	s16, wzr
+	fmov	s17, wzr
+	fmov	s18, wzr
+	fmov	s19, s16
+	fmov	s20, wzr
+	fmov	s21, s16
+	fmov	s22, wzr
+	fmov	s23, s16
+.endm
+
+.macro KERNEL16x2_SUB
+	ld1	{v8.2s}, [pB]
+	add	pB, pB, #8
+	ld1	{v0.4s}, [pA]
+	add	pA, pA, #16
+	ld1	{v1.4s}, [pA]
+	add	pA, pA, #16
+	ld1	{v2.4s}, [pA]
+	add	pA, pA, #16
+	ld1	{v3.4s}, [pA]
+	add	pA, pA, #16
+
+	fmla	v16.4s, v0.4s, v8.2s[0]
+	fmla	v17.4s, v1.4s, v8.2s[0]
+	fmla	v18.4s, v2.4s, v8.2s[0]
+	fmla	v19.4s, v3.4s, v8.2s[0]
+
+	fmla	v20.4s, v0.4s, v8.2s[1]
+	fmla	v21.4s, v1.4s, v8.2s[1]
+	fmla	v22.4s, v2.4s, v8.2s[1]
+	fmla	v23.4s, v3.4s, v8.2s[1]
+.endm
+
+.macro SAVE16x2
+	add	pCRow1, pCRow0, LDC
+
+	ld1	{v0.4s, v1.4s, v2.4s, v3.4s}, [pCRow0]
+	fmla	v0.4s, v16.4s, alphaV0
+	fmla	v1.4s, v17.4s, alphaV1
+	fmla	v2.4s, v18.4s, alphaV2
+	fmla	v3.4s, v19.4s, alphaV3
+	st1 	{v0.4s, v1.4s, v2.4s, v3.4s}, [pCRow0]
+
+	ld1	{v4.4s, v5.4s, v6.4s, v7.4s}, [pCRow1]
+	fmla	v4.4s, v20.4s, alphaV0
+	fmla	v5.4s, v21.4s, alphaV1
+	fmla	v6.4s, v22.4s, alphaV2
+	fmla	v7.4s, v23.4s, alphaV3
+	st1 	{v4.4s, v5.4s, v6.4s, v7.4s}, [pCRow1]
+
+	add	pCRow0, pCRow0, #64
+.endm
+
+/******************************************************************************/
+
+.macro INIT8x2
+	fmov	s16, wzr
+	fmov	s17, s16
+	fmov	s20, s17
+	fmov	s21, s16
+.endm
+
+.macro KERNEL8x2_SUB
+	ld1	{v8.2s}, [pB]
+	add	pB, pB, #8
+	ld1	{v0.4s}, [pA]
+	add	pA, pA, #16
+	ld1	{v1.4s}, [pA]
+	add	pA, pA, #16
+
+	fmla	v16.4s, v0.4s, v8.2s[0]
+	fmla	v17.4s, v1.4s, v8.2s[0]
+
+	fmla	v20.4s, v0.4s, v8.2s[1]
+	fmla	v21.4s, v1.4s, v8.2s[1]
+.endm
+
+.macro SAVE8x2
+	add	pCRow1, pCRow0, LDC
+
+	ld1	{v0.4s, v1.4s}, [pCRow0]
+	fmla	v0.4s, v16.4s, alphaV0
+	fmla	v1.4s, v17.4s, alphaV1
+	st1 	{v0.4s, v1.4s}, [pCRow0]
+
+	add	pCRow2, pCRow1, LDC
+
+	ld1	{v4.4s, v5.4s}, [pCRow1]
+	fmla	v4.4s, v20.4s, alphaV0
+	fmla	v5.4s, v21.4s, alphaV1
+	st1 	{v4.4s, v5.4s}, [pCRow1]
+
+	add	pCRow0, pCRow0, #32
+.endm
+
+/******************************************************************************/
+
 .macro INIT4x2
 	fmov	s16, wzr
 	fmov	s17, s16
@@ -444,6 +898,74 @@ USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 /******************************************************************************/
 
+.macro INIT16x1
+	fmov	s16, wzr
+	fmov	s17, wzr
+	fmov	s18, wzr
+	fmov	s19, s16
+.endm
+
+.macro KERNEL16x1_SUB
+	ldr	s8, [pB]
+	add	pB , pB, #4
+
+	ld1	{v0.4s}, [pA]
+	add	pA, pA, #16
+	ld1	{v1.4s}, [pA]
+	add	pA, pA, #16
+	ld1	{v2.4s}, [pA]
+	add	pA, pA, #16
+	ld1	{v3.4s}, [pA]
+	add	pA, pA, #16
+
+	fmla	v16.4s, v0.4s, v8.2s[0]
+	fmla	v17.4s, v1.4s, v8.2s[0]
+	fmla	v18.4s, v2.4s, v8.2s[0]
+	fmla	v19.4s, v3.4s, v8.2s[0]
+.endm
+
+.macro SAVE16x1
+	ld1	{v0.4s, v1.4s, v2.4s, v3.4s}, [pCRow0]
+	fmla	v0.4s, v16.4s, alphaV0
+	fmla	v1.4s, v17.4s, alphaV1
+	fmla	v2.4s, v18.4s, alphaV2
+	fmla	v3.4s, v19.4s, alphaV3
+	st1 	{v0.4s, v1.4s, v2.4s, v3.4s}, [pCRow0]
+
+	add	pCRow0, pCRow0, #64
+.endm
+
+/******************************************************************************/
+
+.macro INIT8x1
+	fmov	s16, wzr
+	fmov	s17, wzr
+.endm
+
+.macro KERNEL8x1_SUB
+	ldr	s8, [pB]
+	add	pB , pB, #4
+
+	ld1	{v0.4s}, [pA]
+	add	pA, pA, #16
+	ld1	{v1.4s}, [pA]
+	add	pA, pA, #16
+
+	fmla	v16.4s, v0.4s, v8.2s[0]
+	fmla	v17.4s, v1.4s, v8.2s[0]
+.endm
+
+.macro SAVE8x1
+	ld1	{v0.4s, v1.4s}, [pCRow0]
+	fmla	v0.4s, v16.4s, alphaV0
+	fmla	v1.4s, v17.4s, alphaV1
+	st1 	{v0.4s, v1.4s}, [pCRow0]
+
+	add	pCRow0, pCRow0, #32
+.endm
+
+/******************************************************************************/
+
 .macro INIT4x1
 	fmov	s16, wzr
 	fmov	s17, s16
@@ -468,9 +990,6 @@ USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 	add	pCRow0, pCRow0, #16
 .endm
-
-
-
 
 /******************************************************************************/
 
@@ -564,11 +1083,153 @@ sgemm_kernel_L4_BEGIN:
 
 	mov	pA, origPA			// pA = start of A array
 
+sgemm_kernel_L4_M16_BEGIN:
+
+	mov	counterI, origM
+	asr 	counterI, counterI, #4		// counterI = counterI / 16
+	cmp 	counterI, #0
+	ble	sgemm_kernel_L4_M8_BEGIN
+
+sgemm_kernel_L4_M16_20:
+
+	mov	pB, origPB
+
+	asr 	counterL , origK, #1		// L = K / 2
+	cmp	counterL , #2			// is there at least 4 to do?
+	blt	sgemm_kernel_L4_M16_32
+
+	KERNEL16x4_I				// do one in the K
+	KERNEL16x4_M2				// do another in the K
+
+	subs	counterL, counterL, #2
+	ble	sgemm_kernel_L4_M16_22a
+	.align 5
+
+sgemm_kernel_L4_M16_22:
+
+	KERNEL16x4_M1
+	KERNEL16x4_M2
+
+	subs	counterL, counterL, #1
+	bgt	sgemm_kernel_L4_M16_22
+
+sgemm_kernel_L4_M16_22a:
+
+	KERNEL16x4_M1
+	KERNEL16x4_E
+
+	b	 sgemm_kernel_L4_M16_44
+
+sgemm_kernel_L4_M16_32:
+
+	tst	counterL, #1
+	ble	sgemm_kernel_L4_M16_40
+
+	KERNEL16x4_I
+	KERNEL16x4_E
+
+	b	sgemm_kernel_L4_M16_44
+
+sgemm_kernel_L4_M16_40:
+
+	INIT16x4
+
+sgemm_kernel_L4_M16_44:
+
+	ands	counterL , origK, #1
+	ble	sgemm_kernel_L4_M16_100
+
+sgemm_kernel_L4_M16_46:
+
+	KERNEL16x4_SUB
+
+sgemm_kernel_L4_M16_100:
+
+	SAVE16x4
+
+sgemm_kernel_L4_M16_END:
+	subs	counterI, counterI, #1
+	bne	sgemm_kernel_L4_M16_20
+
+//------------------------------------------------------------------------------
+
+sgemm_kernel_L4_M8_BEGIN:
+
+	mov	counterI, origM
+	tst	counterI , #15
+	ble	sgemm_kernel_L4_END
+
+	tst	counterI, #8
+	ble	sgemm_kernel_L4_M4_BEGIN
+
+sgemm_kernel_L4_M8_20:
+
+	mov	pB, origPB
+
+	asr 	counterL , origK, #1		// L = K / 2
+	cmp	counterL , #2			// is there at least 4 to do?
+	blt	sgemm_kernel_L4_M8_32
+
+	KERNEL8x4_I				// do one in the K
+	KERNEL8x4_M2				// do another in the K
+
+	subs	counterL, counterL, #2
+	ble	sgemm_kernel_L4_M8_22a
+	.align 5
+
+sgemm_kernel_L4_M8_22:
+
+	KERNEL8x4_M1
+	KERNEL8x4_M2
+
+	subs	counterL, counterL, #1
+	bgt	sgemm_kernel_L4_M8_22
+
+sgemm_kernel_L4_M8_22a:
+
+	KERNEL8x4_M1
+	KERNEL8x4_E
+
+	b	 sgemm_kernel_L4_M8_44
+
+sgemm_kernel_L4_M8_32:
+
+	tst	counterL, #1
+	ble	sgemm_kernel_L4_M8_40
+
+	KERNEL8x4_I
+	KERNEL8x4_E
+
+	b	sgemm_kernel_L4_M8_44
+
+sgemm_kernel_L4_M8_40:
+
+	INIT8x4
+
+sgemm_kernel_L4_M8_44:
+
+	ands	counterL , origK, #1
+	ble	sgemm_kernel_L4_M8_100
+
+sgemm_kernel_L4_M8_46:
+
+	KERNEL8x4_SUB
+
+sgemm_kernel_L4_M8_100:
+
+	SAVE8x4
+
+sgemm_kernel_L4_M8_END:
+
+//------------------------------------------------------------------------------
+
 sgemm_kernel_L4_M4_BEGIN:
 
 	mov	counterI, origM
-	asr 	counterI, counterI, #2		// counterI = counterI / 4
-	cmp 	counterI, #0
+	tst	counterI , #7
+	ble	sgemm_kernel_L4_END
+
+	tst	counterI, #4
 	ble	sgemm_kernel_L4_M2_BEGIN
 
 sgemm_kernel_L4_M4_20:
@@ -629,8 +1290,8 @@ sgemm_kernel_L4_M4_100:
 	SAVE4x4
 
 sgemm_kernel_L4_M4_END:
-	subs	counterI, counterI, #1
-	bne	sgemm_kernel_L4_M4_20
+
+//------------------------------------------------------------------------------
 
 sgemm_kernel_L4_M2_BEGIN:
 
@@ -756,11 +1417,122 @@ sgemm_kernel_L2_BEGIN:   // less than 2 left in N direction
 
 	mov	pA, origPA			// pA = A
 
-sgemm_kernel_L2_M4_BEGIN:
+sgemm_kernel_L2_M16_BEGIN:
 
 	mov	counterI, origM
-	asr 	counterI, counterI, #2		// counterI = counterI / 4
+	asr 	counterI, counterI, #4		// counterI = counterI / 16
 	cmp	counterI,#0
+	ble	sgemm_kernel_L2_M8_BEGIN
+
+sgemm_kernel_L2_M16_20:
+
+	INIT16x2
+
+	mov	pB, origPB
+
+	asr	counterL , origK, #3		// counterL = counterL / 8
+	cmp	counterL,#0
+	ble	sgemm_kernel_L2_M16_40
+	.align 5
+
+sgemm_kernel_L2_M16_22:
+	KERNEL16x2_SUB
+	KERNEL16x2_SUB
+	KERNEL16x2_SUB
+	KERNEL16x2_SUB
+
+	KERNEL16x2_SUB
+	KERNEL16x2_SUB
+	KERNEL16x2_SUB
+	KERNEL16x2_SUB
+
+	subs	counterL, counterL, #1
+	bgt	sgemm_kernel_L2_M16_22
+
+
+sgemm_kernel_L2_M16_40:
+
+	ands	counterL , origK, #7		// counterL = counterL % 8
+	ble	sgemm_kernel_L2_M16_100
+
+sgemm_kernel_L2_M16_42:
+
+	KERNEL16x2_SUB
+
+	subs	counterL, counterL, #1
+	bgt	sgemm_kernel_L2_M16_42
+
+sgemm_kernel_L2_M16_100:
+
+	SAVE16x2
+
+sgemm_kernel_L2_M16_END:
+
+	subs	counterI, counterI, #1
+	bgt	sgemm_kernel_L2_M16_20
+
+//------------------------------------------------------------------------------
+
+sgemm_kernel_L2_M8_BEGIN:
+	mov	counterI, origM
+	tst	counterI , #15
+	ble	sgemm_kernel_L2_END
+
+	tst	counterI, #8
+	ble	sgemm_kernel_L2_M4_BEGIN
+
+sgemm_kernel_L2_M8_20:
+
+	INIT8x2
+
+	mov	pB, origPB
+
+	asr	counterL , origK, #3		// counterL = counterL / 8
+	cmp	counterL,#0
+	ble	sgemm_kernel_L2_M8_40
+	.align 5
+
+sgemm_kernel_L2_M8_22:
+	KERNEL8x2_SUB
+	KERNEL8x2_SUB
+	KERNEL8x2_SUB
+	KERNEL8x2_SUB
+
+	KERNEL8x2_SUB
+	KERNEL8x2_SUB
+	KERNEL8x2_SUB
+	KERNEL8x2_SUB
+
+	subs	counterL, counterL, #1
+	bgt	sgemm_kernel_L2_M8_22
+
+
+sgemm_kernel_L2_M8_40:
+
+	ands	counterL , origK, #7		// counterL = counterL % 8
+	ble	sgemm_kernel_L2_M8_100
+
+sgemm_kernel_L2_M8_42:
+
+	KERNEL8x2_SUB
+
+	subs	counterL, counterL, #1
+	bgt	sgemm_kernel_L2_M8_42
+
+sgemm_kernel_L2_M8_100:
+
+	SAVE8x2
+
+sgemm_kernel_L2_M8_END:
+
+//------------------------------------------------------------------------------
+
+sgemm_kernel_L2_M4_BEGIN:
+	mov	counterI, origM
+	tst	counterI , #7
+	ble	sgemm_kernel_L2_END
+
+	tst	counterI, #4
 	ble	sgemm_kernel_L2_M2_BEGIN
 
 sgemm_kernel_L2_M4_20:
@@ -807,8 +1579,7 @@ sgemm_kernel_L2_M4_100:
 
 sgemm_kernel_L2_M4_END:
 
-	subs	counterI, counterI, #1
-	bgt	sgemm_kernel_L2_M4_20
+//------------------------------------------------------------------------------
 
 
 sgemm_kernel_L2_M2_BEGIN:
@@ -929,11 +1700,123 @@ sgemm_kernel_L1_BEGIN:
 
 	mov	pA, origPA			// pA = A
 
-sgemm_kernel_L1_M4_BEGIN:
+sgemm_kernel_L1_M16_BEGIN:
 
 	mov	counterI, origM
-	asr 	counterI, counterI, #2		// counterI = counterI / 4
+	asr 	counterI, counterI, #4		// counterI = counterI / 16
 	cmp	counterI, #0
+	ble	sgemm_kernel_L1_M8_BEGIN
+
+sgemm_kernel_L1_M16_20:
+
+	INIT16x1
+
+	mov	pB, origPB
+
+	asr	counterL , origK, #3		// counterL = counterL / 8
+	cmp	counterL , #0
+	ble	sgemm_kernel_L1_M16_40
+	.align 5
+
+sgemm_kernel_L1_M16_22:
+	KERNEL16x1_SUB
+	KERNEL16x1_SUB
+	KERNEL16x1_SUB
+	KERNEL16x1_SUB
+
+	KERNEL16x1_SUB
+	KERNEL16x1_SUB
+	KERNEL16x1_SUB
+	KERNEL16x1_SUB
+
+	subs	counterL, counterL, #1
+	bgt	sgemm_kernel_L1_M16_22
+
+
+sgemm_kernel_L1_M16_40:
+
+	ands	counterL , origK, #7		// counterL = counterL % 8
+	ble	sgemm_kernel_L1_M16_100
+
+sgemm_kernel_L1_M16_42:
+
+	KERNEL16x1_SUB
+
+	subs	counterL, counterL, #1
+	bgt	sgemm_kernel_L1_M16_42
+
+sgemm_kernel_L1_M16_100:
+
+	SAVE16x1
+
+sgemm_kernel_L1_M16_END:
+
+	subs	counterI, counterI, #1
+	bgt	sgemm_kernel_L1_M16_20
+
+//------------------------------------------------------------------------------
+
+sgemm_kernel_L1_M8_BEGIN:
+
+	mov	counterI, origM
+	tst	counterI , #15
+	ble	sgemm_kernel_L1_END
+
+	tst	counterI, #8
+	ble	sgemm_kernel_L1_M4_BEGIN
+
+sgemm_kernel_L1_M8_20:
+
+	INIT8x1
+
+	mov	pB, origPB
+
+	asr	counterL , origK, #3		// counterL = counterL / 8
+	cmp	counterL , #0
+	ble	sgemm_kernel_L1_M8_40
+	.align 5
+
+sgemm_kernel_L1_M8_22:
+	KERNEL8x1_SUB
+	KERNEL8x1_SUB
+	KERNEL8x1_SUB
+	KERNEL8x1_SUB
+
+	KERNEL8x1_SUB
+	KERNEL8x1_SUB
+	KERNEL8x1_SUB
+	KERNEL8x1_SUB
+
+	subs	counterL, counterL, #1
+	bgt	sgemm_kernel_L1_M8_22
+
+
+sgemm_kernel_L1_M8_40:
+
+	ands	counterL , origK, #7		// counterL = counterL % 8
+	ble	sgemm_kernel_L1_M8_100
+
+sgemm_kernel_L1_M8_42:
+
+	KERNEL8x1_SUB
+
+	subs	counterL, counterL, #1
+	bgt	sgemm_kernel_L1_M8_42
+
+sgemm_kernel_L1_M8_100:
+
+	SAVE8x1
+
+sgemm_kernel_L1_M8_END:
+
+//------------------------------------------------------------------------------
+
+sgemm_kernel_L1_M4_BEGIN:
+	mov	counterI, origM
+	tst	counterI , #7
+	ble	sgemm_kernel_L1_END
+
+	tst	counterI, #4
 	ble	sgemm_kernel_L1_M2_BEGIN
 
 sgemm_kernel_L1_M4_20:
@@ -980,9 +1863,7 @@ sgemm_kernel_L1_M4_100:
 
 sgemm_kernel_L1_M4_END:
 
-	subs	counterI, counterI, #1
-	bgt	sgemm_kernel_L1_M4_20
-
+//------------------------------------------------------------------------------
 
 sgemm_kernel_L1_M2_BEGIN:
 
