@@ -1467,7 +1467,7 @@ strmm_kernel_begin:
 
 strmm_kernel_L16_BEGIN:
 	mov	pCRow0, pC			// pCRow0 = C
-	add	pC, pC, LDC, lsl #3
+	add	pC, pC, LDC, lsl #4
 
 #if defined(LEFT)
 	mov	tempOffset, offset

@@ -1462,7 +1462,7 @@ sgemm_kernel_begin:
 
 sgemm_kernel_L16_BEGIN:
 	mov	pCRow0, pC			// pCRow0 = C
-	add	pC, pC, LDC, lsl #3
+	add	pC, pC, LDC, lsl #4
 
 	mov	pA, origPA			// pA = start of A array
 
