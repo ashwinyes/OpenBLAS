@@ -317,95 +317,95 @@ USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 .macro SAVE4x16
 	add	pCRow1, pCRow0, LDC
 
-	ld1	{v0.4s}, [pCRow0]
+
 	fmul	v0.4s, v16.4s, alphaV0
 	st1 	{v0.4s}, [pCRow0]
 
 	add	pCRow2, pCRow1, LDC
 
-	ld1	{v1.4s}, [pCRow1]
+
 	fmul	v1.4s, v17.4s, alphaV1
 	st1 	{v1.4s}, [pCRow1]
 
 	add	pCRow1, pCRow2, LDC
 
-	ld1	{v2.4s}, [pCRow2]
+
 	fmul	v2.4s, v18.4s, alphaV2
 	st1 	{v2.4s}, [pCRow2]
 
 	add	pCRow2, pCRow1, LDC
 
-	ld1	{v3.4s}, [pCRow1]
+
 	fmul	v3.4s, v19.4s, alphaV3
 	st1 	{v3.4s}, [pCRow1]
 
 	add	pCRow1, pCRow2, LDC
 
-	ld1	{v4.4s}, [pCRow2]
+
 	fmul	v4.4s, v20.4s, alphaV0
 	st1 	{v4.4s}, [pCRow2]
 
 	add	pCRow2, pCRow1, LDC
 
-	ld1	{v5.4s}, [pCRow1]
+
 	fmul	v5.4s, v21.4s, alphaV1
 	st1 	{v5.4s}, [pCRow1]
 
 	add	pCRow1, pCRow2, LDC
 
-	ld1	{v6.4s}, [pCRow2]
+
 	fmul	v6.4s, v22.4s, alphaV2
 	st1 	{v6.4s}, [pCRow2]
 
 	add	pCRow2, pCRow1, LDC
 
-	ld1	{v7.4s}, [pCRow1]
+
 	fmul	v7.4s, v23.4s, alphaV3
 	st1 	{v7.4s}, [pCRow1]
 
 	add	pCRow1, pCRow2, LDC
 
-	ld1	{v0.4s}, [pCRow2]
+
 	fmul	v0.4s, v24.4s, alphaV0
 	st1 	{v0.4s}, [pCRow2]
 
 	add	pCRow2, pCRow1, LDC
 
-	ld1	{v1.4s}, [pCRow1]
+
 	fmul	v1.4s, v25.4s, alphaV1
 	st1 	{v1.4s}, [pCRow1]
 
 	add	pCRow1, pCRow2, LDC
 
-	ld1	{v2.4s}, [pCRow2]
+
 	fmul	v2.4s, v26.4s, alphaV2
 	st1 	{v2.4s}, [pCRow2]
 
 	add	pCRow2, pCRow1, LDC
 
-	ld1	{v3.4s}, [pCRow1]
+
 	fmul	v3.4s, v27.4s, alphaV3
 	st1 	{v3.4s}, [pCRow1]
 
 	add	pCRow1, pCRow2, LDC
 
-	ld1	{v4.4s}, [pCRow2]
+
 	fmul	v4.4s, v28.4s, alphaV0
 	st1 	{v4.4s}, [pCRow2]
 
 	add	pCRow2, pCRow1, LDC
 
-	ld1	{v5.4s}, [pCRow1]
+
 	fmul	v5.4s, v29.4s, alphaV1
 	st1 	{v5.4s}, [pCRow1]
 
 	add	pCRow1, pCRow2, LDC
 
-	ld1	{v6.4s}, [pCRow2]
+
 	fmul	v6.4s, v30.4s, alphaV2
 	st1 	{v6.4s}, [pCRow2]
 
-	ld1	{v7.4s}, [pCRow1]
+
 	fmul	v7.4s, v31.4s, alphaV3
 	st1 	{v7.4s}, [pCRow1]
 
@@ -469,95 +469,95 @@ USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 .macro SAVE2x16
 	add	pCRow1, pCRow0, LDC
 
-	ld1	{v0.2s}, [pCRow0]
+
 	fmul	v0.2s, v16.2s, alphaV0
 	st1 	{v0.2s}, [pCRow0]
 
 	add	pCRow2, pCRow1, LDC
 
-	ld1	{v1.2s}, [pCRow1]
+
 	fmul	v1.2s, v17.2s, alphaV1
 	st1 	{v1.2s}, [pCRow1]
 
 	add	pCRow1, pCRow2, LDC
 
-	ld1	{v2.2s}, [pCRow2]
+
 	fmul	v2.2s, v18.2s, alphaV2
 	st1 	{v2.2s}, [pCRow2]
 
 	add	pCRow2, pCRow1, LDC
 
-	ld1	{v3.2s}, [pCRow1]
+
 	fmul	v3.2s, v19.2s, alphaV3
 	st1 	{v3.2s}, [pCRow1]
 
 	add	pCRow1, pCRow2, LDC
 
-	ld1	{v4.2s}, [pCRow2]
+
 	fmul	v4.2s, v20.2s, alphaV0
 	st1 	{v4.2s}, [pCRow2]
 
 	add	pCRow2, pCRow1, LDC
 
-	ld1	{v5.2s}, [pCRow1]
+
 	fmul	v5.2s, v21.2s, alphaV1
 	st1 	{v5.2s}, [pCRow1]
 
 	add	pCRow1, pCRow2, LDC
 
-	ld1	{v6.2s}, [pCRow2]
+
 	fmul	v6.2s, v22.2s, alphaV2
 	st1 	{v6.2s}, [pCRow2]
 
 	add	pCRow2, pCRow1, LDC
 
-	ld1	{v7.2s}, [pCRow1]
+
 	fmul	v7.2s, v23.2s, alphaV3
 	st1 	{v7.2s}, [pCRow1]
 
 	add	pCRow1, pCRow2, LDC
 
-	ld1	{v0.2s}, [pCRow2]
+
 	fmul	v0.2s, v24.2s, alphaV0
 	st1 	{v0.2s}, [pCRow2]
 
 	add	pCRow2, pCRow1, LDC
 
-	ld1	{v1.2s}, [pCRow1]
+
 	fmul	v1.2s, v25.2s, alphaV1
 	st1 	{v1.2s}, [pCRow1]
 
 	add	pCRow1, pCRow2, LDC
 
-	ld1	{v2.2s}, [pCRow2]
+
 	fmul	v2.2s, v26.2s, alphaV2
 	st1 	{v2.2s}, [pCRow2]
 
 	add	pCRow2, pCRow1, LDC
 
-	ld1	{v3.2s}, [pCRow1]
+
 	fmul	v3.2s, v27.2s, alphaV3
 	st1 	{v3.2s}, [pCRow1]
 
 	add	pCRow1, pCRow2, LDC
 
-	ld1	{v4.2s}, [pCRow2]
+
 	fmul	v4.2s, v28.2s, alphaV0
 	st1 	{v4.2s}, [pCRow2]
 
 	add	pCRow2, pCRow1, LDC
 
-	ld1	{v5.2s}, [pCRow1]
+
 	fmul	v5.2s, v29.2s, alphaV1
 	st1 	{v5.2s}, [pCRow1]
 
 	add	pCRow1, pCRow2, LDC
 
-	ld1	{v6.2s}, [pCRow2]
+
 	fmul	v6.2s, v30.2s, alphaV2
 	st1 	{v6.2s}, [pCRow2]
 
-	ld1	{v7.2s}, [pCRow1]
+
 	fmul	v7.2s, v31.2s, alphaV3
 	st1 	{v7.2s}, [pCRow1]
 
@@ -621,95 +621,95 @@ USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 .macro SAVE1x16
 	add	pCRow1, pCRow0, LDC
 
-	ldr	s0, [pCRow0]
+
 	fmul	s0, s16, alphaV0
 	str 	s0, [pCRow0]
 
 	add	pCRow2, pCRow1, LDC
 
-	ldr	s1, [pCRow1]
+
 	fmul	s1, s17, alphaV1
 	str 	s1, [pCRow1]
 
 	add	pCRow1, pCRow2, LDC
 
-	ldr	s2, [pCRow2]
+
 	fmul	s2, s18, alphaV2
 	str 	s2, [pCRow2]
 
 	add	pCRow2, pCRow1, LDC
 
-	ldr	s3, [pCRow1]
+
 	fmul	s3, s19, alphaV3
 	str 	s3, [pCRow1]
 
 	add	pCRow1, pCRow2, LDC
 
-	ldr	s4, [pCRow2]
+
 	fmul	s4, s20, alphaV0
 	str 	s4, [pCRow2]
 
 	add	pCRow2, pCRow1, LDC
 
-	ldr	s5, [pCRow1]
+
 	fmul	s5, s21, alphaV1
 	str 	s5, [pCRow1]
 
 	add	pCRow1, pCRow2, LDC
 
-	ldr	s6, [pCRow2]
+
 	fmul	s6, s22, alphaV2
 	str 	s6, [pCRow2]
 
 	add	pCRow2, pCRow1, LDC
 
-	ldr	s7, [pCRow1]
+
 	fmul	s7, s23, alphaV3
 	str 	s7, [pCRow1]
 
 	add	pCRow1, pCRow2, LDC
 
-	ldr	s0, [pCRow2]
+
 	fmul	s0, s24, alphaV0
 	str 	s0, [pCRow2]
 
 	add	pCRow2, pCRow1, LDC
 
-	ldr	s1, [pCRow1]
+
 	fmul	s1, s25, alphaV1
 	str 	s1, [pCRow1]
 
 	add	pCRow1, pCRow2, LDC
 
-	ldr	s2, [pCRow2]
+
 	fmul	s2, s26, alphaV2
 	str 	s2, [pCRow2]
 
 	add	pCRow2, pCRow1, LDC
 
-	ldr	s3, [pCRow1]
+
 	fmul	s3, s27, alphaV3
 	str 	s3, [pCRow1]
 
 	add	pCRow1, pCRow2, LDC
 
-	ldr	s4, [pCRow2]
+
 	fmul	s4, s28, alphaV0
 	str 	s4, [pCRow2]
 
 	add	pCRow2, pCRow1, LDC
 
-	ldr	s5, [pCRow1]
+
 	fmul	s5, s29, alphaV1
 	str 	s5, [pCRow1]
 
 	add	pCRow1, pCRow2, LDC
 
-	ldr	s6, [pCRow2]
+
 	fmul	s6, s30, alphaV2
 	str 	s6, [pCRow2]
 
-	ldr	s7, [pCRow1]
+
 	fmul	s7, s31, alphaV3
 	str 	s7, [pCRow1]
 
@@ -1504,7 +1504,7 @@ strmm_kernel_L16_M4_20:
 	add	tempK, tempOffset, #16
 #endif
 
-	asr 	counterL , origK, #1		// L = K / 2
+	asr 	counterL , tempK, #1		// L = K / 2
 	cmp	counterL , #2			// is there at least 4 to do?
 	blt	strmm_kernel_L16_M4_32
 
@@ -1546,7 +1546,7 @@ strmm_kernel_L16_M4_40:
 
 strmm_kernel_L16_M4_44:
 
-	ands	counterL , origK, #1
+	ands	counterL , tempK, #1
 	ble	strmm_kernel_L16_M4_100
 
 strmm_kernel_L16_M4_46:
@@ -1610,7 +1610,7 @@ strmm_kernel_L16_M2_20:
 	add	tempK, tempOffset, #16
 #endif
 
-	asr 	counterL , origK, #3		// counterL = counterL / 8
+	asr 	counterL , tempK, #3		// counterL = counterL / 8
 	cmp	counterL , #0
 	ble	strmm_kernel_L16_M2_40
 
@@ -1632,7 +1632,7 @@ strmm_kernel_L16_M2_22:
 
 strmm_kernel_L16_M2_40:
 
-	ands	counterL , origK, #7		// counterL = counterL % 8
+	ands	counterL , tempK, #7		// counterL = counterL % 8
 	ble	strmm_kernel_L16_M2_100
 
 strmm_kernel_L16_M2_42:
@@ -1693,7 +1693,7 @@ strmm_kernel_L16_M1_20:
 	add	tempK, tempOffset, #16
 #endif
 
-	asr 	counterL , origK, #3		// counterL = counterL / 8
+	asr 	counterL , tempK, #3		// counterL = counterL / 8
 	cmp	counterL , #0
 	ble	strmm_kernel_L16_M1_40
 
@@ -1714,7 +1714,7 @@ strmm_kernel_L16_M1_22:
 
 strmm_kernel_L16_M1_40:
 
-	ands	counterL , origK, #7		// counterL = counterL % 8
+	ands	counterL , tempK, #7		// counterL = counterL % 8
 	ble	strmm_kernel_L16_M1_100
 
 strmm_kernel_L16_M1_42:
