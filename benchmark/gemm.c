@@ -27,6 +27,7 @@ USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include <stdio.h>
 #include <stdlib.h>
+#include <stdint.h>
 #ifdef __CYGWIN32__
 #include <sys/time.h>
 #endif
@@ -120,7 +121,7 @@ static void *huge_malloc(BLASLONG size){
 
 int main(int argc, char *argv[]){
 
-  FLOAT *a, *b, *c;
+  FLOAT *a, *b, *c, *d;
   FLOAT alpha[] = {1.0, 0.0};
   FLOAT beta [] = {0.0, 0.0};
   char transa = 'N';
@@ -193,6 +194,9 @@ int main(int argc, char *argv[]){
   if (( c = (FLOAT *)malloc(sizeof(FLOAT) * m * n * COMPSIZE)) == NULL) {
     fprintf(stderr,"Out of Memory!!\n");exit(1);
   }
+  if (( d = (FLOAT *)malloc(sizeof(FLOAT) * m * n * COMPSIZE)) == NULL) {
+    fprintf(stderr,"Out of Memory!!\n");exit(1);
+  }
 
 #ifdef linux
   srandom(getpid());
@@ -206,6 +210,7 @@ int main(int argc, char *argv[]){
   }
   for (i = 0; i < m * n * COMPSIZE; i++) {
     c[i] = ((FLOAT) rand() / (FLOAT) RAND_MAX) - 0.5;
+    d[i] = c[i];
   }
 
   fprintf(stderr, "          SIZE                   Flops             Time\n");
@@ -239,7 +244,25 @@ int main(int argc, char *argv[]){
 	    " %10.2f MFlops %10.6f sec\n",
 	    COMPSIZE * COMPSIZE * 2. * (double)k * (double)m * (double)n / timeg * 1.e-6, time1);
     
+    dgemmnetlib_(&transa, &transb, &m, &n, &k, alpha, a, &lda, b, &ldb, beta, d, &ldc);
   }
+  int errors = 0;
+  for (i = 0; i < m; i++) {
+    for (j = 0; j < n; j++) {
+      uint64_t c_masked = *(uint64_t *)&c[i*m + j];
+      uint64_t d_masked = *(uint64_t *)&d[i*m + j];
+      //c_masked = c_masked & (~0xfffUL);
+      //d_masked = d_masked & (~0xfffUL);
+      if (c_masked != d_masked) {      
+        printf("[%d][%d] c=%016lX d=%016lX\n", i, j,
+                      *(uint64_t *)&c[i*m + j],
+                      *(uint64_t *)&d[i*m + j]);
+        if (errors++ > 100)
+          return 1;
+      }
+    }
+  }
+  printf("Implementaion is correct!!!\n");
 
   return 0;
 }

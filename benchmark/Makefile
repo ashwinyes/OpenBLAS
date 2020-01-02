@@ -490,7 +490,8 @@ sgemm.essl : sgemm.$(SUFFIX)
 
 ##################################### Dgemm ####################################################
 dgemm.goto : dgemm.$(SUFFIX) ../$(LIBNAME)
-	$(CC) $(CFLAGS) -o $(@F) $^ $(CEXTRALIB) $(EXTRALIB) $(FEXTRALIB) -lm
+	gfortran -O2 -frecursive -ffixed-line-length-132 -c -o dgemm_netlib.o dgemm.f
+	$(CC) $(CFLAGS) dgemm_netlib.o -o $(@F) $^ $(CEXTRALIB) $(EXTRALIB) $(FEXTRALIB) -lm 
 
 dgemm.acml : dgemm.$(SUFFIX)
 	-$(CC) $(CFLAGS) -o $(@F) $^ $(LIBACML) $(CEXTRALIB) $(EXTRALIB) $(FEXTRALIB)
