@@ -251,18 +251,17 @@ int main(int argc, char *argv[]){
     for (j = 0; j < n; j++) {
       uint64_t c_masked = *(uint64_t *)&c[i*m + j];
       uint64_t d_masked = *(uint64_t *)&d[i*m + j];
-      //c_masked = c_masked & (~0xfffUL);
-      //d_masked = d_masked & (~0xfffUL);
       if (c_masked != d_masked) {      
-        printf("[%d][%d] c=%016lX d=%016lX\n", i, j,
+        if (errors++ < 50) {
+        	printf("[%d][%d] c=%016lX d=%016lX\n", i, j,
                       *(uint64_t *)&c[i*m + j],
                       *(uint64_t *)&d[i*m + j]);
-        if (errors++ > 100)
-          return 1;
+	}
       }
     }
   }
-  printf("Implementaion is correct!!!\n");
+  if (errors == 0) printf("CORRECT!!!\n");
+  else printf("INCORRECT FOR M=%d N=%d K=%d!!!\n", m, n, k);
 
   return 0;
 }

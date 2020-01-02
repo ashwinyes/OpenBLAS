@@ -790,11 +790,11 @@ USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 .BEGIN:
     ptrue   p0.d, all                           // 8 lane mask
     mov     tmp, #4
-    whilelt p1.d, xzr, tmp                     // 4 lane mask
+    whilelt p1.d, xzr, tmp                      // 4 lane mask
     mov     tmp, #2
-    whilelt p2.d, xzr, tmp                     // 2 lane mask
+    whilelt p2.d, xzr, tmp                      // 2 lane mask
     mov     tmp, #1
-    whilelt p3.d, xzr, tmp                     // 1 lane mask
+    whilelt p3.d, xzr, tmp                      // 1 lane mask
 
     lsl     LDC, LDC, #3                        // ldc = ldc * 8
     fmov    alpha, d0
@@ -837,8 +837,8 @@ USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 /* N8xM4 **********************************************************************/
 .N8xM4_BEGIN:
-    mov     I, origM
-    asr     I, I, #2                            // M / 4
+    and     I, origM, #7
+    asr     I, I, #2                            // (M % 8) / 4
     cmp     I, #0
     ble     .N8xM2_BEGIN
 
@@ -858,8 +858,8 @@ USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 /* N8xM2 **********************************************************************/
 .N8xM2_BEGIN:
-    mov     I, origM
-    asr     I, I, #2                            // M / 2
+    and     I, origM, #3
+    asr     I, I, #1                            // (M % 4) / 2
     cmp     I, #0
     ble     .N8xM1_BEGIN
 
@@ -880,7 +880,7 @@ USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 /* N8xM1 **********************************************************************/
 .N8xM1_BEGIN:
     mov     I, origM
-    tst     I, #1                               // M % 1
+    tst     I, #1                               // M % 2
     ble     .N8_END
 
 .N8xM1_INIT:
@@ -899,8 +899,8 @@ USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 /* N8 END *********************************************************************/
 .N8_END:
-    lsl     tmpK, origK, #6                    // tmpk = origK * 8 * sizeof(double)
-    add     origPB, origPB, tmpK               // B = B + tmpK
+    lsl     tmpK, origK, #6                     // tmpk = origK * 8 * sizeof(double)
+    add     origPB, origPB, tmpK                // B = B + tmpK
     subs    J, J, #1                            // CHECK WHETHER MORE 8x CHUNKS
                                                 // OF MATRIX B REMAINS
     bgt     .N8_BEGIN
@@ -942,8 +942,8 @@ USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 /* N4xM4 **********************************************************************/
 .N4xM4_BEGIN:
-    mov     I, origM
-    asr     I, I, #2                            // M / 4
+    and     I, origM, #7
+    asr     I, I, #2                            // (M % 8) / 4
     cmp     I, #0
     ble     .N4xM2_BEGIN
 
@@ -963,8 +963,8 @@ USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 /* N4xM2 **********************************************************************/
 .N4xM2_BEGIN:
-    mov     I, origM
-    asr     I, I, #2                            // M / 2
+    and     I, origM, #3
+    asr     I, I, #1                            // (M % 4) / 2
     cmp     I, #0
     ble     .N4xM1_BEGIN
 
@@ -1044,8 +1044,8 @@ USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 /* N2xM4 **********************************************************************/
 .N2xM4_BEGIN:
-    mov     I, origM
-    asr     I, I, #2                            // M / 4
+    and     I, origM, #7
+    asr     I, I, #2                            // (M % 8) / 4
     cmp     I, #0
     ble     .N2xM2_BEGIN
 
@@ -1065,8 +1065,8 @@ USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 /* N2xM2 **********************************************************************/
 .N2xM2_BEGIN:
-    mov     I, origM
-    asr     I, I, #1                            // M / 2
+    and     I, origM, #3
+    asr     I, I, #1                            // (M % 4) / 2
     cmp     I, #0
     ble     .N2xM1_BEGIN
 
@@ -1144,8 +1144,8 @@ USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 /* N1xM4 **********************************************************************/
 .N1xM4_BEGIN:
-    mov     I, origM
-    asr     I, I, #2                            // M / 4
+    and     I, origM, #7
+    asr     I, I, #2                            // (M % 4) / 2
     cmp     I, #0
     ble     .N1xM2_BEGIN
 
@@ -1165,8 +1165,8 @@ USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 /* N1xM2 **********************************************************************/
 .N1xM2_BEGIN:
-    mov     I, origM
-    asr     I, I, #1                            // M / 2
+    and     I, origM, #3
+    asr     I, I, #1                            // (M % 4) / 2
     cmp     I, #0
     ble     .N1xM1_BEGIN
 
