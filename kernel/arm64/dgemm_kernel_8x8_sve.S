@@ -38,29 +38,30 @@ USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #define origPB          x4
 #define origPC          x5
 #define LDC             x6
-#define temp            x7
-#define tempK           x8
+#define tmp            x7
+#define tmpK           x8
 #define I               x9
 #define J               x10
 #define pA              x11
 #define pB              x12
 #define pC              x13
 #define alpha           x14
-#define pCRow0          x15
-#define pCRow1          x16
-#define pCRow2          x17
-#define pCRow3          x18
-#define pCRow4          x19
-#define pCRow5          x20
-#define pCRow6          x21
-#define pCRow7          x22
+#define pCRow           x15
+#define pCRow0          x16
+#define pCRow1          x17
+#define pCRow2          x18
+#define pCRow3          x19
+#define pCRow4          x20
+#define pCRow5          x21
+#define pCRow6          x22
+#define pCRow7          x23
 
 #define alphaV          z15.d
 
-#define pMask8          p0/z
-#define pMask4          p1/z
-#define pMask2          p2/z
-#define pMask1          p3/z
+#define pMask8          p0
+#define pMask4          p1
+#define pMask2          p2
+#define pMask1          p3
 
 /*******************************************************************************
 * Macro definitions
@@ -78,19 +79,23 @@ USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 .endm
 
 .macro MULTIPLY_N8xM8
-    ld1d    z0.d, pMask8, [pA]
+    ld1d    z0.d, pMask8/z, [pA]
     add     pA, pA, #64
-    ld1d    z8.d, pMask8, [pB]
+    /* TODO: Try using ld1d + dup */
+    ld1rqd  z8.d, pMask8/z, [pB]
+    ld1rqd  z9.d, pMask8/z, [pB, #16]
+    ld1rqd  z10.d, pMask8/z, [pB, #32]
+    ld1rqd  z11.d, pMask8/z, [pB, #48]
     add     pB, pB, #64
 
     fmla    z16.d, z0.d, z8.d[0]
     fmla    z17.d, z0.d, z8.d[1]
-    fmla    z18.d, z0.d, z8.d[2]
-    fmla    z19.d, z0.d, z8.d[3]
-    fmla    z20.d, z0.d, z8.d[4]
-    fmla    z21.d, z0.d, z8.d[5]
-    fmla    z22.d, z0.d, z8.d[6]
-    fmla    z23.d, z0.d, z8.d[7]
+    fmla    z18.d, z0.d, z9.d[0]
+    fmla    z19.d, z0.d, z9.d[1]
+    fmla    z20.d, z0.d, z10.d[0]
+    fmla    z21.d, z0.d, z10.d[1]
+    fmla    z22.d, z0.d, z11.d[0]
+    fmla    z23.d, z0.d, z11.d[1]
 .endm
 
 .macro SAVE_N8xM8
@@ -103,34 +108,34 @@ USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
     add     pCRow5, pCRow4, LDC
     add     pCRow6, pCRow5, LDC
     add     pCRow7, pCRow6, LDC
-    add     pCRow, pCRow, #512
+    add     pCRow, pCRow, #64
 
-    ld1d    z0.d, pMask8, [pCRow0]
-    ld1d    z1.d, pMask8, [pCRow1]
-    ld1d    z2.d, pMask8, [pCRow2]
-    ld1d    z3.d, pMask8, [pCRow3]
-    ld1d    z4.d, pMask8, [pCRow4]
-    ld1d    z5.d, pMask8, [pCRow5]
-    ld1d    z6.d, pMask8, [pCRow6]
-    ld1d    z7.d, pMask8, [pCRow7]
+    ld1d    z0.d, pMask8/z, [pCRow0]
+    ld1d    z1.d, pMask8/z, [pCRow1]
+    ld1d    z2.d, pMask8/z, [pCRow2]
+    ld1d    z3.d, pMask8/z, [pCRow3]
+    ld1d    z4.d, pMask8/z, [pCRow4]
+    ld1d    z5.d, pMask8/z, [pCRow5]
+    ld1d    z6.d, pMask8/z, [pCRow6]
+    ld1d    z7.d, pMask8/z, [pCRow7]
 
-    fmla    z0.d, z16.d, alphaV
-    fmla    z1.d, z17.d, alphaV
-    fmla    z2.d, z18.d, alphaV
-    fmla    z3.d, z19.d, alphaV
-    fmla    z4.d, z20.d, alphaV
-    fmla    z5.d, z21.d, alphaV
-    fmla    z6.d, z22.d, alphaV
-    fmla    z7.d, z23.d, alphaV
+    fmla    z0.d, pMask8/m, z16.d, alphaV
+    fmla    z1.d, pMask8/m, z17.d, alphaV
+    fmla    z2.d, pMask8/m, z18.d, alphaV
+    fmla    z3.d, pMask8/m, z19.d, alphaV
+    fmla    z4.d, pMask8/m, z20.d, alphaV
+    fmla    z5.d, pMask8/m, z21.d, alphaV
+    fmla    z6.d, pMask8/m, z22.d, alphaV
+    fmla    z7.d, pMask8/m, z23.d, alphaV
 
-    st1d    z0.d, pMask8, [pCRow0]
-    st1d    z1.d, pMask8, [pCRow1]
-    st1d    z2.d, pMask8, [pCRow2]
-    st1d    z3.d, pMask8, [pCRow3]
-    st1d    z4.d, pMask8, [pCRow4]
-    st1d    z5.d, pMask8, [pCRow5]
-    st1d    z6.d, pMask8, [pCRow6]
-    st1d    z7.d, pMask8, [pCRow7]
+    st1d    {z0.d}, pMask8, [pCRow0]
+    st1d    {z1.d}, pMask8, [pCRow1]
+    st1d    {z2.d}, pMask8, [pCRow2]
+    st1d    {z3.d}, pMask8, [pCRow3]
+    st1d    {z4.d}, pMask8, [pCRow4]
+    st1d    {z5.d}, pMask8, [pCRow5]
+    st1d    {z6.d}, pMask8, [pCRow6]
+    st1d    {z7.d}, pMask8, [pCRow7]
 .endm
 /** 4x8 ***********************************************************************/
 .macro INIT_N8xM4
@@ -145,19 +150,24 @@ USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 .endm
 
 .macro MULTIPLY_N8xM4
-    ld1d    z0.d, pMask4, [pA]
+    ld1d    z0.d, pMask4/z, [pA]
     add     pA, pA, #32
-    ld1d    z8.d, pMask8, [pB]
+    /* TODO: Try using ld1d + dup */
+    ld1rqd  z8.d, pMask8/z, [pB]
+    ld1rqd  z9.d, pMask8/z, [pB, #16]
+    ld1rqd  z10.d, pMask8/z, [pB, #32]
+    ld1rqd  z11.d, pMask8/z, [pB, #48]
     add     pB, pB, #64
 
+    /* TODO: Try to avoid multiplying all 128-bit vector lanes */
     fmla    z16.d, z0.d, z8.d[0]
     fmla    z17.d, z0.d, z8.d[1]
-    fmla    z18.d, z0.d, z8.d[2]
-    fmla    z19.d, z0.d, z8.d[3]
-    fmla    z20.d, z0.d, z8.d[4]
-    fmla    z21.d, z0.d, z8.d[5]
-    fmla    z22.d, z0.d, z8.d[6]
-    fmla    z23.d, z0.d, z8.d[7]
+    fmla    z18.d, z0.d, z9.d[0]
+    fmla    z19.d, z0.d, z9.d[1]
+    fmla    z20.d, z0.d, z10.d[0]
+    fmla    z21.d, z0.d, z10.d[1]
+    fmla    z22.d, z0.d, z11.d[0]
+    fmla    z23.d, z0.d, z11.d[1]
 .endm
 
 .macro SAVE_N8xM4
@@ -170,52 +180,178 @@ USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
     add     pCRow5, pCRow4, LDC
     add     pCRow6, pCRow5, LDC
     add     pCRow7, pCRow6, LDC
-    add     pCRow, pCRow, #512
+    add     pCRow, pCRow, #32
 
-    ld1d    z0.d, pMask4, [pCRow0]
-    ld1d    z1.d, pMask4, [pCRow1]
-    ld1d    z2.d, pMask4, [pCRow2]
-    ld1d    z3.d, pMask4, [pCRow3]
-    ld1d    z4.d, pMask4, [pCRow4]
-    ld1d    z5.d, pMask4, [pCRow5]
-    ld1d    z6.d, pMask4, [pCRow6]
-    ld1d    z7.d, pMask4, [pCRow7]
+    ld1d    z0.d, pMask4/z, [pCRow0]
+    ld1d    z1.d, pMask4/z, [pCRow1]
+    ld1d    z2.d, pMask4/z, [pCRow2]
+    ld1d    z3.d, pMask4/z, [pCRow3]
+    ld1d    z4.d, pMask4/z, [pCRow4]
+    ld1d    z5.d, pMask4/z, [pCRow5]
+    ld1d    z6.d, pMask4/z, [pCRow6]
+    ld1d    z7.d, pMask4/z, [pCRow7]
 
-    fmla    z0.d, z16.d, alphaV
-    fmla    z1.d, z17.d, alphaV
-    fmla    z2.d, z18.d, alphaV
-    fmla    z3.d, z19.d, alphaV
-    fmla    z4.d, z20.d, alphaV
-    fmla    z5.d, z21.d, alphaV
-    fmla    z6.d, z22.d, alphaV
-    fmla    z7.d, z23.d, alphaV
+    fmla    z0.d, pMask4/m, z16.d, alphaV
+    fmla    z1.d, pMask4/m, z17.d, alphaV
+    fmla    z2.d, pMask4/m, z18.d, alphaV
+    fmla    z3.d, pMask4/m, z19.d, alphaV
+    fmla    z4.d, pMask4/m, z20.d, alphaV
+    fmla    z5.d, pMask4/m, z21.d, alphaV
+    fmla    z6.d, pMask4/m, z22.d, alphaV
+    fmla    z7.d, pMask4/m, z23.d, alphaV
 
-    st1d    z0.d, pMask4, [pCRow0]
-    st1d    z1.d, pMask4, [pCRow1]
-    st1d    z2.d, pMask4, [pCRow2]
-    st1d    z3.d, pMask4, [pCRow3]
-    st1d    z4.d, pMask4, [pCRow4]
-    st1d    z5.d, pMask4, [pCRow5]
-    st1d    z6.d, pMask4, [pCRow6]
-    st1d    z7.d, pMask4, [pCRow7]
+    st1d    {z0.d}, pMask4, [pCRow0]
+    st1d    {z1.d}, pMask4, [pCRow1]
+    st1d    {z2.d}, pMask4, [pCRow2]
+    st1d    {z3.d}, pMask4, [pCRow3]
+    st1d    {z4.d}, pMask4, [pCRow4]
+    st1d    {z5.d}, pMask4, [pCRow5]
+    st1d    {z6.d}, pMask4, [pCRow6]
+    st1d    {z7.d}, pMask4, [pCRow7]
 .endm
 /** 2x8 ***********************************************************************/
 .macro INIT_N8xM2
+    dup     z16.d, #0
+    dup     z17.d, #0
+    dup     z18.d, #0
+    dup     z19.d, #0
+    dup     z20.d, #0
+    dup     z21.d, #0
+    dup     z22.d, #0
+    dup     z23.d, #0
 .endm
 
 .macro MULTIPLY_N8xM2
+    ld1d    z0.d, pMask2/z, [pA]
+    add     pA, pA, #16
+    /* TODO: Try using ld1d + dup */
+    ld1rqd  z8.d, pMask8/z, [pB]
+    ld1rqd  z9.d, pMask8/z, [pB, #16]
+    ld1rqd  z10.d, pMask8/z, [pB, #32]
+    ld1rqd  z11.d, pMask8/z, [pB, #48]
+    add     pB, pB, #64
+
+    /* TODO: Try to avoid multiplying all 128-bit vector lanes */
+    fmla    z16.d, z0.d, z8.d[0]
+    fmla    z17.d, z0.d, z8.d[1]
+    fmla    z18.d, z0.d, z9.d[0]
+    fmla    z19.d, z0.d, z9.d[1]
+    fmla    z20.d, z0.d, z10.d[0]
+    fmla    z21.d, z0.d, z10.d[1]
+    fmla    z22.d, z0.d, z11.d[0]
+    fmla    z23.d, z0.d, z11.d[1]
 .endm
 
 .macro SAVE_N8xM2
+    dup     alphaV, alpha
+    mov     pCRow0, pCRow
+    add     pCRow1, pCRow0, LDC
+    add     pCRow2, pCRow1, LDC
+    add     pCRow3, pCRow2, LDC
+    add     pCRow4, pCRow3, LDC
+    add     pCRow5, pCRow4, LDC
+    add     pCRow6, pCRow5, LDC
+    add     pCRow7, pCRow6, LDC
+    add     pCRow, pCRow, #16
+
+    ld1d    z0.d, pMask2/z, [pCRow0]
+    ld1d    z1.d, pMask2/z, [pCRow1]
+    ld1d    z2.d, pMask2/z, [pCRow2]
+    ld1d    z3.d, pMask2/z, [pCRow3]
+    ld1d    z4.d, pMask2/z, [pCRow4]
+    ld1d    z5.d, pMask2/z, [pCRow5]
+    ld1d    z6.d, pMask2/z, [pCRow6]
+    ld1d    z7.d, pMask2/z, [pCRow7]
+
+    fmla    z0.d, pMask2/m, z16.d, alphaV
+    fmla    z1.d, pMask2/m, z17.d, alphaV
+    fmla    z2.d, pMask2/m, z18.d, alphaV
+    fmla    z3.d, pMask2/m, z19.d, alphaV
+    fmla    z4.d, pMask2/m, z20.d, alphaV
+    fmla    z5.d, pMask2/m, z21.d, alphaV
+    fmla    z6.d, pMask2/m, z22.d, alphaV
+    fmla    z7.d, pMask2/m, z23.d, alphaV
+
+    st1d    {z0.d}, pMask2, [pCRow0]
+    st1d    {z1.d}, pMask2, [pCRow1]
+    st1d    {z2.d}, pMask2, [pCRow2]
+    st1d    {z3.d}, pMask2, [pCRow3]
+    st1d    {z4.d}, pMask2, [pCRow4]
+    st1d    {z5.d}, pMask2, [pCRow5]
+    st1d    {z6.d}, pMask2, [pCRow6]
+    st1d    {z7.d}, pMask2, [pCRow7]
 .endm
 /** 1x8 ***********************************************************************/
 .macro INIT_N8xM1
+    dup     z16.d, #0
+    dup     z17.d, #0
+    dup     z18.d, #0
+    dup     z19.d, #0
+    dup     z20.d, #0
+    dup     z21.d, #0
+    dup     z22.d, #0
+    dup     z23.d, #0
 .endm
 
 .macro MULTIPLY_N8xM1
+    ld1d    z0.d, pMask1/z, [pA]
+    add     pA, pA, #8
+    /* TODO: Try using ld1d + dup */
+    ld1rqd  z8.d, pMask8/z, [pB]
+    ld1rqd  z9.d, pMask8/z, [pB, #16]
+    ld1rqd  z10.d, pMask8/z, [pB, #32]
+    ld1rqd  z11.d, pMask8/z, [pB, #48]
+    add     pB, pB, #64
+
+    /* TODO: Try to avoid multiplying all 128-bit vector lanes */
+    fmla    z16.d, z0.d, z8.d[0]
+    fmla    z17.d, z0.d, z8.d[1]
+    fmla    z18.d, z0.d, z9.d[0]
+    fmla    z19.d, z0.d, z9.d[1]
+    fmla    z20.d, z0.d, z10.d[0]
+    fmla    z21.d, z0.d, z10.d[1]
+    fmla    z22.d, z0.d, z11.d[0]
+    fmla    z23.d, z0.d, z11.d[1]
 .endm
 
 .macro SAVE_N8xM1
+    dup     alphaV, alpha
+    mov     pCRow0, pCRow
+    add     pCRow1, pCRow0, LDC
+    add     pCRow2, pCRow1, LDC
+    add     pCRow3, pCRow2, LDC
+    add     pCRow4, pCRow3, LDC
+    add     pCRow5, pCRow4, LDC
+    add     pCRow6, pCRow5, LDC
+    add     pCRow7, pCRow6, LDC
+    add     pCRow, pCRow, #8
+
+    ld1d    z0.d, pMask1/z, [pCRow0]
+    ld1d    z1.d, pMask1/z, [pCRow1]
+    ld1d    z2.d, pMask1/z, [pCRow2]
+    ld1d    z3.d, pMask1/z, [pCRow3]
+    ld1d    z4.d, pMask1/z, [pCRow4]
+    ld1d    z5.d, pMask1/z, [pCRow5]
+    ld1d    z6.d, pMask1/z, [pCRow6]
+    ld1d    z7.d, pMask1/z, [pCRow7]
+
+    fmla    z0.d, pMask1/m, z16.d, alphaV
+    fmla    z1.d, pMask1/m, z17.d, alphaV
+    fmla    z2.d, pMask1/m, z18.d, alphaV
+    fmla    z3.d, pMask1/m, z19.d, alphaV
+    fmla    z4.d, pMask1/m, z20.d, alphaV
+    fmla    z5.d, pMask1/m, z21.d, alphaV
+    fmla    z6.d, pMask1/m, z22.d, alphaV
+    fmla    z7.d, pMask1/m, z23.d, alphaV
+
+    st1d    {z0.d}, pMask1, [pCRow0]
+    st1d    {z1.d}, pMask1, [pCRow1]
+    st1d    {z2.d}, pMask1, [pCRow2]
+    st1d    {z3.d}, pMask1, [pCRow3]
+    st1d    {z4.d}, pMask1, [pCRow4]
+    st1d    {z5.d}, pMask1, [pCRow5]
+    st1d    {z6.d}, pMask1, [pCRow6]
+    st1d    {z7.d}, pMask1, [pCRow7]
 .endm
 /** 8x4 ***********************************************************************/
 .macro INIT_N4xM8
@@ -226,66 +362,172 @@ USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 .endm
 
 .macro MULTIPLY_N4xM8
-    ld1d    z0.d, pMask8, [pA]
+    ld1d    z0.d, pMask8/z, [pA]
     add     pA, pA, #64
-    ld1d    z8.d, pMask4, [pB]
+    ld1rqd  z8.d, pMask8/z, [pB]
+    ld1rqd  z9.d, pMask8/z, [pB, #16]
     add     pB, pB, #32
 
     fmla    z16.d, z0.d, z8.d[0]
     fmla    z17.d, z0.d, z8.d[1]
-    fmla    z18.d, z0.d, z8.d[2]
-    fmla    z19.d, z0.d, z8.d[3]
+    fmla    z18.d, z0.d, z9.d[0]
+    fmla    z19.d, z0.d, z9.d[1]
 .endm
 
 .macro SAVE_N4xM8
     dup     alphaV, alpha
-	mov     pCRow0, pCRow
+    mov     pCRow0, pCRow
     add     pCRow1, pCRow0, LDC
     add     pCRow2, pCRow1, LDC
     add     pCRow3, pCRow2, LDC
-    add     pCRow, pCRow, #256
+    add     pCRow, pCRow, #64
 
-    ld1d    z0.d, pMask8, [pCRow0]
-    ld1d    z1.d, pMask8, [pCRow1]
-    ld1d    z2.d, pMask8, [pCRow2]
-    ld1d    z3.d, pMask8, [pCRow3]
+    ld1d    z0.d, pMask8/z, [pCRow0]
+    ld1d    z1.d, pMask8/z, [pCRow1]
+    ld1d    z2.d, pMask8/z, [pCRow2]
+    ld1d    z3.d, pMask8/z, [pCRow3]
 
-    fmla    z0.d, z16.d, alphaV
-    fmla    z1.d, z17.d, alphaV
-    fmla    z2.d, z18.d, alphaV
-    fmla    z3.d, z19.d, alphaV
+    fmla    z0.d, pMask8/m, z16.d, alphaV
+    fmla    z1.d, pMask8/m, z17.d, alphaV
+    fmla    z2.d, pMask8/m, z18.d, alphaV
+    fmla    z3.d, pMask8/m, z19.d, alphaV
 
-    st1d    z0.d, pMask8, [pCRow0]
-    st1d    z1.d, pMask8, [pCRow1]
-    st1d    z2.d, pMask8, [pCRow2]
-    st1d    z3.d, pMask8, [pCRow3]
+    st1d    {z0.d}, pMask8, [pCRow0]
+    st1d    {z1.d}, pMask8, [pCRow1]
+    st1d    {z2.d}, pMask8, [pCRow2]
+    st1d    {z3.d}, pMask8, [pCRow3]
 .endm
 /** 4x4 ***********************************************************************/
 .macro INIT_N4xM4
+    dup     z16.d, #0
+    dup     z17.d, #0
+    dup     z18.d, #0
+    dup     z19.d, #0
 .endm
 
 .macro MULTIPLY_N4xM4
+    ld1d    z0.d, pMask4/z, [pA]
+    add     pA, pA, #32
+    ld1rqd  z8.d, pMask8/z, [pB]
+    ld1rqd  z9.d, pMask8/z, [pB, #16]
+    add     pB, pB, #32
+
+    fmla    z16.d, z0.d, z8.d[0]
+    fmla    z17.d, z0.d, z8.d[1]
+    fmla    z18.d, z0.d, z9.d[0]
+    fmla    z19.d, z0.d, z9.d[1]
 .endm
 
 .macro SAVE_N4xM4
+    dup     alphaV, alpha
+    mov     pCRow0, pCRow
+    add     pCRow1, pCRow0, LDC
+    add     pCRow2, pCRow1, LDC
+    add     pCRow3, pCRow2, LDC
+    add     pCRow, pCRow, #32
+
+    ld1d    z0.d, pMask4/z, [pCRow0]
+    ld1d    z1.d, pMask4/z, [pCRow1]
+    ld1d    z2.d, pMask4/z, [pCRow2]
+    ld1d    z3.d, pMask4/z, [pCRow3]
+
+    fmla    z0.d, pMask4/m, z16.d, alphaV
+    fmla    z1.d, pMask4/m, z17.d, alphaV
+    fmla    z2.d, pMask4/m, z18.d, alphaV
+    fmla    z3.d, pMask4/m, z19.d, alphaV
+
+    st1d    {z0.d}, pMask4, [pCRow0]
+    st1d    {z1.d}, pMask4, [pCRow1]
+    st1d    {z2.d}, pMask4, [pCRow2]
+    st1d    {z3.d}, pMask4, [pCRow3]
 .endm
 /** 2x4 ***********************************************************************/
 .macro INIT_N4xM2
+    dup     z16.d, #0
+    dup     z17.d, #0
+    dup     z18.d, #0
+    dup     z19.d, #0
 .endm
 
 .macro MULTIPLY_N4xM2
+    ld1d    z0.d, pMask2/z, [pA]
+    add     pA, pA, #16
+    ld1rqd  z8.d, pMask8/z, [pB]
+    ld1rqd  z9.d, pMask8/z, [pB, #16]
+    add     pB, pB, #32
+
+    fmla    z16.d, z0.d, z8.d[0]
+    fmla    z17.d, z0.d, z8.d[1]
+    fmla    z18.d, z0.d, z9.d[0]
+    fmla    z19.d, z0.d, z9.d[1]
 .endm
 
 .macro SAVE_N4xM2
+    dup     alphaV, alpha
+    mov     pCRow0, pCRow
+    add     pCRow1, pCRow0, LDC
+    add     pCRow2, pCRow1, LDC
+    add     pCRow3, pCRow2, LDC
+    add     pCRow, pCRow, #16
+
+    ld1d    z0.d, pMask2/z, [pCRow0]
+    ld1d    z1.d, pMask2/z, [pCRow1]
+    ld1d    z2.d, pMask2/z, [pCRow2]
+    ld1d    z3.d, pMask2/z, [pCRow3]
+
+    fmla    z0.d, pMask2/m, z16.d, alphaV
+    fmla    z1.d, pMask2/m, z17.d, alphaV
+    fmla    z2.d, pMask2/m, z18.d, alphaV
+    fmla    z3.d, pMask2/m, z19.d, alphaV
+
+    st1d    {z0.d}, pMask2, [pCRow0]
+    st1d    {z1.d}, pMask2, [pCRow1]
+    st1d    {z2.d}, pMask2, [pCRow2]
+    st1d    {z3.d}, pMask2, [pCRow3]
 .endm
 /** 1x4 ***********************************************************************/
 .macro INIT_N4xM1
+    dup     z16.d, #0
+    dup     z17.d, #0
+    dup     z18.d, #0
+    dup     z19.d, #0
 .endm
 
 .macro MULTIPLY_N4xM1
+    ld1d    z0.d, pMask1/z, [pA]
+    add     pA, pA, #8
+    ld1rqd  z8.d, pMask8/z, [pB]
+    ld1rqd  z9.d, pMask8/z, [pB, #16]
+    add     pB, pB, #32
+
+    fmla    z16.d, z0.d, z8.d[0]
+    fmla    z17.d, z0.d, z8.d[1]
+    fmla    z18.d, z0.d, z9.d[0]
+    fmla    z19.d, z0.d, z9.d[1]
 .endm
 
 .macro SAVE_N4xM1
+    dup     alphaV, alpha
+    mov     pCRow0, pCRow
+    add     pCRow1, pCRow0, LDC
+    add     pCRow2, pCRow1, LDC
+    add     pCRow3, pCRow2, LDC
+    add     pCRow, pCRow, #8
+
+    ld1d    z0.d, pMask1/z, [pCRow0]
+    ld1d    z1.d, pMask1/z, [pCRow1]
+    ld1d    z2.d, pMask1/z, [pCRow2]
+    ld1d    z3.d, pMask1/z, [pCRow3]
+
+    fmla    z0.d, pMask1/m, z16.d, alphaV
+    fmla    z1.d, pMask1/m, z17.d, alphaV
+    fmla    z2.d, pMask1/m, z18.d, alphaV
+    fmla    z3.d, pMask1/m, z19.d, alphaV
+
+    st1d    {z0.d}, pMask1, [pCRow0]
+    st1d    {z1.d}, pMask1, [pCRow1]
+    st1d    {z2.d}, pMask1, [pCRow2]
+    st1d    {z3.d}, pMask1, [pCRow3]
 .endm
 /** 8x2 ***********************************************************************/
 .macro INIT_N2xM8
@@ -294,9 +536,9 @@ USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 .endm
 
 .macro MULTIPLY_N2xM8
-    ld1d    z0.d, pMask8, [pA]
+    ld1d    z0.d, pMask8/z, [pA]
     add     pA, pA, #64
-    ld1d    z8.d, pMask2, [pB]
+    ld1rqd  z8.d, pMask8/z, [pB]
     add     pB, pB, #16
 
     fmla    z16.d, z0.d, z8.d[0]
@@ -304,46 +546,112 @@ USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 .endm
 
 .macro SAVE_N2xM8
-	dup     alphaV, alpha
-	mov     pCRow0, pCRow
+    dup     alphaV, alpha
+    mov     pCRow0, pCRow
     add     pCRow1, pCRow0, LDC
-    add     pCRow, pCRow, #128
+    add     pCRow, pCRow, #64
 
-    ld1d    z0.d, pMask8, [pCRow0]
-    ld1d    z1.d, pMask8, [pCRow1]
+    ld1d    z0.d, pMask8/z, [pCRow0]
+    ld1d    z1.d, pMask8/z, [pCRow1]
 
-    fmla    z0.d, z16.d, alphaV
-    fmla    z1.d, z17.d, alphaV
+    fmla    z0.d, pMask8/m, z16.d, alphaV
+    fmla    z1.d, pMask8/m, z17.d, alphaV
 
-    st1d    z0.d, pMask8, [pCRow0]
-    st1d    z1.d, pMask8, [pCRow1]
+    st1d    {z0.d}, pMask8, [pCRow0]
+    st1d    {z1.d}, pMask8, [pCRow1]
 .endm
 /** 4x2 ***********************************************************************/
 .macro INIT_N2xM4
+    dup     z16.d, #0
+    dup     z17.d, #0
 .endm
 
 .macro MULTIPLY_N2xM4
+    ld1d    z0.d, pMask4/z, [pA]
+    add     pA, pA, #32
+    ld1rqd  z8.d, pMask8/z, [pB]
+    add     pB, pB, #16
+
+    fmla    z16.d, z0.d, z8.d[0]
+    fmla    z17.d, z0.d, z8.d[1]
 .endm
 
 .macro SAVE_N2xM4
+    dup     alphaV, alpha
+    mov     pCRow0, pCRow
+    add     pCRow1, pCRow0, LDC
+    add     pCRow, pCRow, #32
+
+    ld1d    z0.d, pMask4/z, [pCRow0]
+    ld1d    z1.d, pMask4/z, [pCRow1]
+
+    fmla    z0.d, pMask4/m, z16.d, alphaV
+    fmla    z1.d, pMask4/m, z17.d, alphaV
+
+    st1d    {z0.d}, pMask4, [pCRow0]
+    st1d    {z1.d}, pMask4, [pCRow1]
 .endm
 /** 2x2 ***********************************************************************/
 .macro INIT_N2xM2
+    dup     z16.d, #0
+    dup     z17.d, #0
 .endm
 
 .macro MULTIPLY_N2xM2
+    ld1d    z0.d, pMask2/z, [pA]
+    add     pA, pA, #16
+    ld1rqd  z8.d, pMask8/z, [pB]
+    add     pB, pB, #16
+
+    fmla    z16.d, z0.d, z8.d[0]
+    fmla    z17.d, z0.d, z8.d[1]
 .endm
 
 .macro SAVE_N2xM2
+    dup     alphaV, alpha
+    mov     pCRow0, pCRow
+    add     pCRow1, pCRow0, LDC
+    add     pCRow, pCRow, #16
+
+    ld1d    z0.d, pMask2/z, [pCRow0]
+    ld1d    z1.d, pMask2/z, [pCRow1]
+
+    fmla    z0.d, pMask2/m, z16.d, alphaV
+    fmla    z1.d, pMask2/m, z17.d, alphaV
+
+    st1d    {z0.d}, pMask2, [pCRow0]
+    st1d    {z1.d}, pMask2, [pCRow1]
 .endm
 /** 1x2 ***********************************************************************/
 .macro INIT_N2xM1
+    dup     z16.d, #0
+    dup     z17.d, #0
 .endm
 
 .macro MULTIPLY_N2xM1
+    ld1d    z0.d, pMask1/z, [pA]
+    add     pA, pA, #8
+    ld1rqd  z8.d, pMask8/z, [pB]
+    add     pB, pB, #16
+
+    fmla    z16.d, z0.d, z8.d[0]
+    fmla    z17.d, z0.d, z8.d[1]
 .endm
 
 .macro SAVE_N2xM1
+    dup     alphaV, alpha
+    mov     pCRow0, pCRow
+    add     pCRow1, pCRow0, LDC
+    add     pCRow, pCRow, #8
+
+    ld1d    z0.d, pMask1/z, [pCRow0]
+    ld1d    z1.d, pMask1/z, [pCRow1]
+
+    fmla    z0.d, pMask1/m, z16.d, alphaV
+    fmla    z1.d, pMask1/m, z17.d, alphaV
+
+    st1d    {z0.d}, pMask1, [pCRow0]
+    st1d    {z1.d}, pMask1, [pCRow1]
 .endm
 /** 8x1 ***********************************************************************/
 .macro INIT_N1xM8
@@ -351,51 +659,99 @@ USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 .endm
 
 .macro MULTIPLY_N1xM8
-    ld1d    z0.d, pMask8, [pA]
+    ld1d    z0.d, pMask8/z, [pA]
     add     pA, pA, #64
-    ld1d    z8.d, pMask1, [pB]
+    ld1rd   {z8.d}, pMask8/z, [pB]
     add     pB, pB, #8
 
     fmla    z16.d, z0.d, z8.d[0]
 .endm
 
 .macro SAVE_N1xM8
-	dup     alphaV, alpha
-	mov     pCRow0, pCRow
-    add     pCRow, pCRow, #128
+    dup     alphaV, alpha
+    mov     pCRow0, pCRow
+    add     pCRow, pCRow, #64
 
-    ld1d    z0.d, pMask8, [pCRow0]
+    ld1d    z0.d, pMask8/z, [pCRow0]
 
-    fmla    z0.d, z16.d, alphaV
+    fmla    z0.d, pMask8/m, z16.d, alphaV
 
-    st1d    z0.d, pMask8, [pCRow0]
+    st1d    {z0.d}, pMask8, [pCRow0]
 .endm
 /** 4x1 ***********************************************************************/
 .macro INIT_N1xM4
+    dup     z16.d, #0
 .endm
 
 .macro MULTIPLY_N1xM4
+    ld1d    z0.d, pMask4/z, [pA]
+    add     pA, pA, #32
+    ld1rd   {z8.d}, pMask8/z, [pB]
+    add     pB, pB, #8
+
+    fmla    z16.d, z0.d, z8.d[0]
 .endm
 
 .macro SAVE_N1xM4
+    dup     alphaV, alpha
+    mov     pCRow0, pCRow
+    add     pCRow, pCRow, #32
+
+    ld1d    z0.d, pMask4/z, [pCRow0]
+
+    fmla    z0.d, pMask4/m, z16.d, alphaV
+
+    st1d    {z0.d}, pMask4, [pCRow0]
 .endm
 /** 2x1 ***********************************************************************/
 .macro INIT_N1xM2
+    dup     z16.d, #0
 .endm
 
 .macro MULTIPLY_N1xM2
+    ld1d    z0.d, pMask2/z, [pA]
+    add     pA, pA, #16
+    ld1rd   {z8.d}, pMask8/z, [pB]
+    add     pB, pB, #8
+
+    fmla    z16.d, z0.d, z8.d[0]
 .endm
 
 .macro SAVE_N1xM2
+    dup     alphaV, alpha
+    mov     pCRow0, pCRow
+    add     pCRow, pCRow, #32
+
+    ld1d    z0.d, pMask2/z, [pCRow0]
+
+    fmla    z0.d, pMask2/m, z16.d, alphaV
+
+    st1d    {z0.d}, pMask2, [pCRow0]
 .endm
 /** 1x1 ***********************************************************************/
 .macro INIT_N1xM1
+    dup     z16.d, #0
 .endm
 
 .macro MULTIPLY_N1xM1
+    ld1d    z0.d, pMask1/z, [pA]
+    add     pA, pA, #8
+    ld1rd   {z8.d}, pMask8/z, [pB]
+    add     pB, pB, #8
+
+    fmla    z16.d, z0.d, z8.d[0]
 .endm
 
 .macro SAVE_N1xM1
+    dup     alphaV, alpha
+    mov     pCRow0, pCRow
+    add     pCRow, pCRow, #32
+
+    ld1d    z0.d, pMask1/z, [pCRow0]
+
+    fmla    z0.d, pMask1/m, z16.d, alphaV
+
+    st1d    {z0.d}, pMask1, [pCRow0]
 .endm
 /*******************************************************************************
 * End of macro definitions
@@ -413,8 +769,8 @@ USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
     cbz     origN, .END
 
 .CHECK_VECTOR_LENGTH:
-    rdvl    temp, #1
-    cmp     temp, #64
+    rdvl    tmp, #1
+    cmp     tmp, #64
     bne     .END                                // Evaluate only for VL = 512b
 
 .SAVE_REGS:
@@ -433,12 +789,12 @@ USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 .BEGIN:
     ptrue   p0.d, all                           // 8 lane mask
-    mov     temp, #4
-    whilelt p1.d, xzr, temp                     // 4 lane mask
-    mov     temp, #2
-    whilelt p2.d, xzr, temp                     // 2 lane mask
-    mov     temp, #1
-    whilelt p3.d, xzr, temp                     // 1 lane mask
+    mov     tmp, #4
+    whilelt p1.d, xzr, tmp                     // 4 lane mask
+    mov     tmp, #2
+    whilelt p2.d, xzr, tmp                     // 2 lane mask
+    mov     tmp, #1
+    whilelt p3.d, xzr, tmp                     // 1 lane mask
 
     lsl     LDC, LDC, #3                        // ldc = ldc * 8
     fmov    alpha, d0
@@ -452,7 +808,7 @@ USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 .N8_BEGIN:
     mov     pCRow, pC
-    add     pC, pC, LDC, #3                     // pC = pC + LDC * 8
+    add     pC, pC, LDC, LSL #3                 // pC = pC + LDC * 8
     mov     pA, origPA
 
 /* N8xM8 **********************************************************************/
@@ -465,12 +821,12 @@ USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 .N8xM8_INIT:
     INIT_N8xM8
     mov     pB, origPB
-    mov     tempK, K
+    mov     tmpK, origK
 
     .align  5
 .N8xM8_LOOP:
     MULTIPLY_N8xM8
-    subs    tempK, tempK, #1
+    subs    tmpK, tmpK, #1
     bne     .N8xM8_LOOP
 
 .N8xM8_SAVE:
@@ -489,12 +845,12 @@ USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 .N8xM4_INIT:
     INIT_N8xM4
     mov     pB, origPB
-    mov     tempK, K
+    mov     tmpK, origK
 
     .align  5
 .N8xM4_LOOP:
     MULTIPLY_N8xM4
-    subs    tempK, tempK, #1
+    subs    tmpK, tmpK, #1
     bgt     .N8xM4_LOOP
 
 .N8xM4_100:
@@ -510,12 +866,12 @@ USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 .N8xM2_INIT:
     INIT_N8xM2
     mov     pB, origPB
-    mov     tempK, K
+    mov     tmpK, origK
 
     .align  5
 .N8xM2_LOOP:
     MULTIPLY_N8xM2
-    subs    tempK, tempK, #1
+    subs    tmpK, tmpK, #1
     bgt     .N8xM2_LOOP
 
 .N8xM2_100:
@@ -530,12 +886,12 @@ USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 .N8xM1_INIT:
     INIT_N8xM1
     mov     pB, origPB
-    mov     tempK, K
+    mov     tmpK, origK
 
     .align  5
 .N8xM1_LOOP:
     MULTIPLY_N8xM1
-    subs    tempK, tempK, #1
+    subs    tmpK, tmpK, #1
     bgt     .N8xM1_LOOP
 
 .N8xM1_SAVE:
@@ -543,8 +899,8 @@ USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 /* N8 END *********************************************************************/
 .N8_END:
-    lsl     tempK, origK, #6                    // tempk = K * 8 * sizeof(double)
-    add     origPB, origPB, tempK               // B = B + tempK
+    lsl     tmpK, origK, #6                    // tmpk = origK * 8 * sizeof(double)
+    add     origPB, origPB, tmpK               // B = B + tmpK
     subs    J, J, #1                            // CHECK WHETHER MORE 8x CHUNKS
                                                 // OF MATRIX B REMAINS
     bgt     .N8_BEGIN
@@ -557,7 +913,7 @@ USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
     tst     J , #4
     ble     .N2_BEGIN                           // N HAS NO 4x CHUNKS
     mov     pCRow, pC
-    add     pC, pC, LDC, #2                     // pC = pC + LDC * 4
+    add     pC, pC, LDC, LSL #2                 // pC = pC + LDC * 4
     mov     pA, origPA
 
 /* N4xM8 **********************************************************************/
@@ -570,12 +926,12 @@ USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 .N4xM8_INIT:
     INIT_N4xM8
     mov     pB, origPB
-    mov     tempK, K
+    mov     tmpK, origK
 
     .align  5
 .N4xM8_LOOP:
     MULTIPLY_N4xM8
-    subs    tempK, tempK, #1
+    subs    tmpK, tmpK, #1
     bne     .N4xM8_LOOP
 
 .N4xM8_SAVE:
@@ -594,12 +950,12 @@ USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 .N4xM4_INIT:
     INIT_N4xM4
     mov     pB, origPB
-    mov     tempK, K
+    mov     tmpK, origK
 
     .align  5
 .N4xM4_LOOP:
     MULTIPLY_N4xM4
-    subs    tempK, tempK, #1
+    subs    tmpK, tmpK, #1
     bgt     .N4xM4_LOOP
 
 .N4xM4_100:
@@ -615,12 +971,12 @@ USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 .N4xM2_INIT:
     INIT_N4xM2
     mov     pB, origPB
-    mov     tempK, K
+    mov     tmpK, origK
 
     .align  5
 .N4xM2_LOOP:
     MULTIPLY_N4xM2
-    subs    tempK, tempK, #1
+    subs    tmpK, tmpK, #1
     bgt     .N4xM2_LOOP
 
 .N4xM2_100:
@@ -635,12 +991,12 @@ USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 .N4xM1_INIT:
     INIT_N4xM1
     mov     pB, origPB
-    mov     tempK, K
+    mov     tmpK, origK
 
     .align  5
 .N4xM1_LOOP:
     MULTIPLY_N4xM1
-    subs    tempK, tempK, #1
+    subs    tmpK, tmpK, #1
     bgt     .N4xM1_LOOP
 
 .N4xM1_SAVE:
@@ -648,8 +1004,8 @@ USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 /* N4 END *********************************************************************/
 .N4_END:
-    lsl     tempK, origK, #5                    // tempk = K * 4 * sizeof(double)
-    add     origPB, origPB, tempK               // B = B + tempK
+    lsl     tmpK, origK, #5                     // tmpk = origK * 4 * sizeof(double)
+    add     origPB, origPB, tmpK                // B = B + tmpK
 
 /* N2 *************************************************************************/
 .N2_BEGIN:
@@ -659,7 +1015,7 @@ USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
     tst     J , #2
     ble     .N1_BEGIN                           // N HAS NO 2x CHUNKS
     mov     pCRow, pC
-    add     pC, pC, LDC, #1                     // pC = pC + LDC * 2
+    add     pC, pC, LDC, LSL #1                 // pC = pC + LDC * 2
     mov     pA, origPA
 
 /* N2xM8 **********************************************************************/
@@ -672,12 +1028,12 @@ USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 .N2xM8_INIT:
     INIT_N2xM8
     mov     pB, origPB
-    mov     tempK, K
+    mov     tmpK, origK
 
     .align  5
 .N2xM8_LOOP:
     MULTIPLY_N2xM8
-    subs    tempK, tempK, #1
+    subs    tmpK, tmpK, #1
     bgt     .N2xM8_LOOP
 
 .N2xM8_SAVE:
@@ -696,12 +1052,12 @@ USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 .N2xM4_INIT:
     INIT_N2xM4
     mov     pB, origPB
-    mov     tempK, K
+    mov     tmpK, origK
 
     .align  5
 .N2xM4_LOOP:
     MULTIPLY_N2xM4
-    subs    tempK, tempK, #1
+    subs    tmpK, tmpK, #1
     bgt     .N2xM4_LOOP
 
 .N2xM4_SAVE:
@@ -717,16 +1073,16 @@ USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 .N2xM2_INIT:
     INIT_N2xM2
     mov     pB, origPB
-    mov     tempK, K
+    mov     tmpK, origK
 
     .align  5
 .N2xM2_LOOP:
     MULTIPLY_N2xM4
-    subs    tempK, tempK, #1
+    subs    tmpK, tmpK, #1
     bgt     .N2xM2_LOOP
 
 .N2xM2_SAVE:
-    SAVE2x2
+    SAVE_N2xM2
 
 /* N2xM1 **********************************************************************/
 .N2xM1_BEGIN:
@@ -737,20 +1093,20 @@ USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 .N2xM1_INIT:
     INIT_N2xM1
     mov     pB, origPB
-    mov     tempK, K
+    mov     tmpK, origK
 
     .align  5
 .N2xM1_LOOP:
     MULTIPLY_N2xM1
-    subs    tempK, tempK, #1
+    subs    tmpK, tmpK, #1
     bgt     .N2xM1_LOOP
 
 .N2xM1_SAVE:
-    SAVE1x2
+    SAVE_N2xM1
 
 /* N2 END *********************************************************************/
 .N2_END:
-    add     origPB, origPB, origK, lsl #4       // B = B + K * 2 * sizeof(double)
+    add     origPB, origPB, origK, lsl #4       // B = B + origK * 2 * sizeof(double)
 
 /* N1 *************************************************************************/
 .N1_BEGIN:
@@ -772,12 +1128,12 @@ USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 .N1xM8_INIT:
     INIT_N1xM8
     mov     pB, origPB
-    mov     tempK, K
+    mov     tmpK, origK
 
     .align  5
 .N1xM8_LOOP:
     MULTIPLY_N1xM8
-    subs    tempK, tempK, #1
+    subs    tmpK, tmpK, #1
     bgt     .N1xM8_LOOP
 
 .N1xM8_SAVE:
@@ -796,12 +1152,12 @@ USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 .N1xM4_INIT:
     INIT_N1xM4
     mov     pB, origPB
-    mov     tempK, K
+    mov     tmpK, origK
 
     .align  5
 .N1xM4_LOOP:
-    KERNE_N1xM4
-    subs    tempK, tempK, #1
+    MULTIPLY_N1xM4
+    subs    tmpK, tmpK, #1
     bgt     .N1xM4_LOOP
 
 .N1xM4_SAVE:
@@ -815,15 +1171,15 @@ USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
     ble     .N1xM1_BEGIN
 
 .N1xM2_INIT:
-    INIT2x1
+    INIT_N2xM1
     mov     pB, origPB
-    mov     tempK, K
+    mov     tmpK, origK
 
     .align  5
 .N1xM2_LOOP:
     MULTIPLY_N1xM2
-    subs    tempK, tempK, #1
-    bgt     .N1xM2_42
+    subs    tmpK, tmpK, #1
+    bgt     .N1xM2_LOOP
 
 .N1xM2_SAVE:
     SAVE_N1xM2
@@ -835,18 +1191,20 @@ USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
     ble     .N1_END
 
 .N1xM1_INIT:
-    INIT1x1
+    INIT_N1xM1
     mov     pB, origPB
-    mov     tempK, K
+    mov     tmpK, origK
 
     .align  5
 .N1xM1_LOOP:
-    KERNEL1x1
-    subs    tempK, tempK, #1
+    MULTIPLY_N1xM1
+    subs    tmpK, tmpK, #1
     bgt     .N1xM1_LOOP
 
 .N1xM1_SAVE:
-    SAVE1x1
+    SAVE_N1xM1
+
+.N1_END:
 
 /* THE END ********************************************************************/
 .RESTORE_REGS:
