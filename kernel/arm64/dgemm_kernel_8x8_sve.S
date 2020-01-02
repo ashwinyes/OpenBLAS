@@ -38,8 +38,8 @@ USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #define origPB          x4
 #define origPC          x5
 #define LDC             x6
-#define tmp            x7
-#define tmpK           x8
+#define tmp             x7
+#define tmpK            x8
 #define I               x9
 #define J               x10
 #define pA              x11
@@ -720,7 +720,7 @@ USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 .macro SAVE_N1xM2
     dup     alphaV, alpha
     mov     pCRow0, pCRow
-    add     pCRow, pCRow, #32
+    add     pCRow, pCRow, #16
 
     ld1d    z0.d, pMask2/z, [pCRow0]
 
@@ -837,9 +837,7 @@ USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 /* N8xM4 **********************************************************************/
 .N8xM4_BEGIN:
-    and     I, origM, #7
-    asr     I, I, #2                            // (M % 8) / 4
-    cmp     I, #0
+    tst     origM, #4
     ble     .N8xM2_BEGIN
 
 .N8xM4_INIT:
@@ -858,9 +856,7 @@ USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 /* N8xM2 **********************************************************************/
 .N8xM2_BEGIN:
-    and     I, origM, #3
-    asr     I, I, #1                            // (M % 4) / 2
-    cmp     I, #0
+    tst     origM, #2
     ble     .N8xM1_BEGIN
 
 .N8xM2_INIT:
@@ -879,8 +875,7 @@ USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 /* N8xM1 **********************************************************************/
 .N8xM1_BEGIN:
-    mov     I, origM
-    tst     I, #1                               // M % 2
+    tst     origM, #1
     ble     .N8_END
 
 .N8xM1_INIT:
@@ -907,10 +902,7 @@ USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 /* N4 *************************************************************************/
 .N4_BEGIN:
-    mov     J , origN
-    tst     J , #7
-    ble     .RESTORE_REGS                       // N WAS MULTIPLE OF 8
-    tst     J , #4
+    tst     origN, #4
     ble     .N2_BEGIN                           // N HAS NO 4x CHUNKS
     mov     pCRow, pC
     add     pC, pC, LDC, LSL #2                 // pC = pC + LDC * 4
@@ -942,9 +934,7 @@ USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 /* N4xM4 **********************************************************************/
 .N4xM4_BEGIN:
-    and     I, origM, #7
-    asr     I, I, #2                            // (M % 8) / 4
-    cmp     I, #0
+    tst     origM, #4
     ble     .N4xM2_BEGIN
 
 .N4xM4_INIT:
@@ -963,9 +953,7 @@ USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 /* N4xM2 **********************************************************************/
 .N4xM2_BEGIN:
-    and     I, origM, #3
-    asr     I, I, #1                            // (M % 4) / 2
-    cmp     I, #0
+    tst     origM, #2
     ble     .N4xM1_BEGIN
 
 .N4xM2_INIT:
@@ -984,8 +972,7 @@ USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 /* N4xM1 **********************************************************************/
 .N4xM1_BEGIN:
-    mov     I, origM
-    tst     I, #1                               // M % 2
+    tst     origM, #1
     ble     .N4_END
 
 .N4xM1_INIT:
@@ -1009,10 +996,7 @@ USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 /* N2 *************************************************************************/
 .N2_BEGIN:
-    mov     J , origN
-    tst     J , #3
-    ble     .RESTORE_REGS                       // N WAS MULTIPLE OF 4
-    tst     J , #2
+    tst     origN, #2
     ble     .N1_BEGIN                           // N HAS NO 2x CHUNKS
     mov     pCRow, pC
     add     pC, pC, LDC, LSL #1                 // pC = pC + LDC * 2
@@ -1044,9 +1028,7 @@ USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 /* N2xM4 **********************************************************************/
 .N2xM4_BEGIN:
-    and     I, origM, #7
-    asr     I, I, #2                            // (M % 8) / 4
-    cmp     I, #0
+    tst     origM, #4
     ble     .N2xM2_BEGIN
 
 .N2xM4_INIT:
@@ -1065,9 +1047,7 @@ USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 /* N2xM2 **********************************************************************/
 .N2xM2_BEGIN:
-    and     I, origM, #3
-    asr     I, I, #1                            // (M % 4) / 2
-    cmp     I, #0
+    tst     origM, #2
     ble     .N2xM1_BEGIN
 
 .N2xM2_INIT:
@@ -1077,7 +1057,7 @@ USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
     .align  5
 .N2xM2_LOOP:
-    MULTIPLY_N2xM4
+    MULTIPLY_N2xM2
     subs    tmpK, tmpK, #1
     bgt     .N2xM2_LOOP
 
@@ -1086,8 +1066,7 @@ USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 /* N2xM1 **********************************************************************/
 .N2xM1_BEGIN:
-    mov     I, origM
-    tst     I, #1                               // M % 2
+    tst     origM, #1
     ble     .N2_END
 
 .N2xM1_INIT:
@@ -1110,8 +1089,7 @@ USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 /* N1 *************************************************************************/
 .N1_BEGIN:
-    mov     J , origN
-    tst     J , #1
+    tst     origN, #1
     ble     .RESTORE_REGS                       // N WAS MULTIPLE OF 2
     mov     pCRow, pC
     add     pC, pC, LDC                         // pC = pC + LDC
@@ -1144,9 +1122,7 @@ USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 /* N1xM4 **********************************************************************/
 .N1xM4_BEGIN:
-    and     I, origM, #7
-    asr     I, I, #2                            // (M % 4) / 2
-    cmp     I, #0
+    tst     origM, #4
     ble     .N1xM2_BEGIN
 
 .N1xM4_INIT:
@@ -1165,13 +1141,11 @@ USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 /* N1xM2 **********************************************************************/
 .N1xM2_BEGIN:
-    and     I, origM, #3
-    asr     I, I, #1                            // (M % 4) / 2
-    cmp     I, #0
+    tst     origM, #2
     ble     .N1xM1_BEGIN
 
 .N1xM2_INIT:
-    INIT_N2xM1
+    INIT_N1xM2
     mov     pB, origPB
     mov     tmpK, origK
 
@@ -1186,8 +1160,7 @@ USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 /* N1xM1 **********************************************************************/
 .N1xM1_BEGIN:
-    mov     I, origM
-    tst     I, #1                               // M % 2
+    tst     origM, #1
     ble     .N1_END
 
 .N1xM1_INIT:
@@ -1225,4 +1198,15 @@ USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
     ret
 
     EPILOGUE
+
+
+//#define origM           x24
+//    mov     origM, x0
+//    ldr     x0, .LPRINT_N8xM8
+//    stp     x29, x30, [sp, #-16]!
+    //bl      printf
+//    ldp     x29, x30, [sp], #16
+//.data
+//.LPRINT_N8xM8:
+//    .asciz  "N8xM8\n"
 

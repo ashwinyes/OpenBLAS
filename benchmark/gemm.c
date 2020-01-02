@@ -197,6 +197,9 @@ int main(int argc, char *argv[]){
   if (( d = (FLOAT *)malloc(sizeof(FLOAT) * m * n * COMPSIZE)) == NULL) {
     fprintf(stderr,"Out of Memory!!\n");exit(1);
   }
+  if (( d = (FLOAT *)malloc(sizeof(FLOAT) * m * n * COMPSIZE)) == NULL) {
+    fprintf(stderr,"Out of Memory!!\n");exit(1);
+  }
 
 #ifdef linux
   srandom(getpid());
@@ -204,12 +207,15 @@ int main(int argc, char *argv[]){
 
   for (i = 0; i < m * k * COMPSIZE; i++) {
     a[i] = ((FLOAT) rand() / (FLOAT) RAND_MAX) - 0.5;
+    //a[i] = i + 1;
   }
   for (i = 0; i < k * n * COMPSIZE; i++) {
     b[i] = ((FLOAT) rand() / (FLOAT) RAND_MAX) - 0.5;
+    //b[i] = i + 1;
   }
   for (i = 0; i < m * n * COMPSIZE; i++) {
     c[i] = ((FLOAT) rand() / (FLOAT) RAND_MAX) - 0.5;
+    //c[i] = i + 1;
     d[i] = c[i];
   }
 
@@ -249,19 +255,40 @@ int main(int argc, char *argv[]){
   int errors = 0;
   for (i = 0; i < m; i++) {
     for (j = 0; j < n; j++) {
-      uint64_t c_masked = *(uint64_t *)&c[i*m + j];
-      uint64_t d_masked = *(uint64_t *)&d[i*m + j];
+      uint64_t c_masked = *(uint64_t *)&c[i*n + j];
+      uint64_t d_masked = *(uint64_t *)&d[i*n + j];
+      //c_masked = c_masked & (~0xfffffffUL);
+      //d_masked = d_masked & (~0xfffffffUL);
       if (c_masked != d_masked) {      
         if (errors++ < 50) {
-        	printf("[%d][%d] c=%016lX d=%016lX\n", i, j,
-                      *(uint64_t *)&c[i*m + j],
-                      *(uint64_t *)&d[i*m + j]);
+        	printf("[%04d][%04d] c=%016lX %6.2lf d=%016lX %6.2lf\n", i, j,
+                      *(uint64_t *)&c[i*n + j], c[i*n + j],
+                      *(uint64_t *)&d[i*n + j], d[i*n + j]);
 	}
       }
     }
   }
   if (errors == 0) printf("CORRECT!!!\n");
-  else printf("INCORRECT FOR M=%d N=%d K=%d!!!\n", m, n, k);
+  else {
+    printf("INCORRECT FOR M=%d N=%d K=%d!!!\n\n", m, n, k);
+#if 0
+    for (i = 0; i < m; i++) {
+      for (j = 0; j < n; j++) {
+        uint64_t c_masked = *(uint64_t *)&c[i*n + j];
+        printf("%6.2lf %016lx", c[i*n + j], c_masked);
+      }
+      printf("\n");
+    }
+    printf("\n");
+    for (i = 0; i < m; i++) {
+      for (j = 0; j < n; j++) {
+        uint64_t d_masked = *(uint64_t *)&d[i*n + j];
+        printf("%6.2lf %016lx", d[i*n + j], d_masked);
+      }
+      printf("\n");
+    }
+#endif
+  }
 
   return 0;
 }
