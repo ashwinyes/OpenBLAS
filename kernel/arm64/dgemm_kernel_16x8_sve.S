@@ -63,11 +63,32 @@ USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #define pMask2          p2
 #define pMask1          p3
 
+#define prefAStride     2560
+#define prefBStride     1200
+#define prefCStride     256
+
 /*******************************************************************************
 * Macro definitions
 *******************************************************************************/
 
 /** N8xM16 ********************************************************************/
+
+.macro PREFETCH_NEXT
+    prfm   pldl1keep, [pA, #prefAStride]
+    prfm   pldl1keep, [pA, #prefAStride+64]
+    prfm   pldl1keep, [pB, #prefBStride]
+.endm
+
+.macro PREFETCH_C
+    prfm   pldl2keep, [pCRow0, #prefCStride]
+    prfm   pldl2keep, [pCRow1, #prefCStride]
+    prfm   pldl2keep, [pCRow2, #prefCStride]
+    prfm   pldl2keep, [pCRow3, #prefCStride]
+    prfm   pldl2keep, [pCRow4, #prefCStride]
+    prfm   pldl2keep, [pCRow5, #prefCStride]
+    prfm   pldl2keep, [pCRow6, #prefCStride]
+    prfm   pldl2keep, [pCRow7, #prefCStride]
+.endm
 
 .macro LOAD_SET1_N8xM16
     ld1d    z0.d, pMask8/z, [pA]
@@ -80,6 +101,7 @@ USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
     ld1rqd  z10.d, pMask8/z, [pB, #32]
     ld1rqd  z11.d, pMask8/z, [pB, #48]
     add     pB, pB, #64
+    PREFETCH_NEXT
 .endm
 
 .macro LOAD_SET2_N8xM16
@@ -93,6 +115,7 @@ USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
     ld1rqd  z14.d, pMask8/z, [pB, #32]
     ld1rqd  z15.d, pMask8/z, [pB, #48]
     add     pB, pB, #64
+    PREFETCH_NEXT
 .endm
 
 .macro MULTIPLY_SET1_N8xM16
@@ -247,6 +270,8 @@ USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
     add     pCRow7, pCRow6, LDC
     add     pCRow, pCRow, #128
 
+    PREFETCH_C
+
     ld1d    z0.d, pMask8/z, [pCRow0]
     ld1d    z1.d, pMask8/z, [pCRow1]
     ld1d    z2.d, pMask8/z, [pCRow2]
@@ -282,6 +307,8 @@ USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
     add     pCRow5, pCRow5, #64
     add     pCRow6, pCRow6, #64
     add     pCRow7, pCRow7, #64
+
+    PREFETCH_C
 
     ld1d    z8.d, pMask8/z, [pCRow0]
     ld1d    z9.d, pMask8/z, [pCRow1]
