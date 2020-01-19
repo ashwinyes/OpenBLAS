@@ -33,7 +33,6 @@ USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #endif
 #include "common.h"
 
-
 #undef GEMM
 
 #ifndef COMPLEX
@@ -206,16 +205,16 @@ int main(int argc, char *argv[]){
 #endif
 
   for (i = 0; i < m * k * COMPSIZE; i++) {
-    a[i] = ((FLOAT) rand() / (FLOAT) RAND_MAX) - 0.5;
-    //a[i] = i + 1;
+    //a[i] = ((FLOAT) rand() / (FLOAT) RAND_MAX) - 0.5;
+    a[i] = i + 1;
   }
   for (i = 0; i < k * n * COMPSIZE; i++) {
-    b[i] = ((FLOAT) rand() / (FLOAT) RAND_MAX) - 0.5;
-    //b[i] = i + 1;
+    //b[i] = ((FLOAT) rand() / (FLOAT) RAND_MAX) - 0.5;
+    b[i] = i + 1;
   }
   for (i = 0; i < m * n * COMPSIZE; i++) {
-    c[i] = ((FLOAT) rand() / (FLOAT) RAND_MAX) - 0.5;
-    //c[i] = i + 1;
+    //c[i] = ((FLOAT) rand() / (FLOAT) RAND_MAX) - 0.5;
+    c[i] = i + 1;
     d[i] = c[i];
   }
 
@@ -257,8 +256,8 @@ int main(int argc, char *argv[]){
     for (j = 0; j < n; j++) {
       uint64_t c_masked = *(uint64_t *)&c[i*n + j];
       uint64_t d_masked = *(uint64_t *)&d[i*n + j];
-      //c_masked = c_masked & (~0xfffffffUL);
-      //d_masked = d_masked & (~0xfffffffUL);
+      c_masked = c_masked & (~0xfffffffUL);
+      d_masked = d_masked & (~0xfffffffUL);
       if (c_masked != d_masked) {      
         if (errors++ < 50) {
         	printf("[%04d][%04d] c=%016lX %6.2lf d=%016lX %6.2lf\n", i, j,
