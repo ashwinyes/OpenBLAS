@@ -732,6 +732,13 @@ void blas_set_parameter(void){
 
 void blas_set_parameter(void)
 {
+  dgemm_p = readenv_atoi("OPENBLAS_P");
+  dgemm_q = readenv_atoi("OPENBLAS_Q");
+  dgemm_r = readenv_atoi("OPENBLAS_R");
+  dgemm_p = dgemm_p ? dgemm_p : 640;
+  dgemm_q = dgemm_q ? dgemm_q : 128;
+  dgemm_r = dgemm_r ? dgemm_r : 4800;
+  fprintf(stderr, "P=%d Q=%d R=%d\n", dgemm_p, dgemm_q, dgemm_r);
 }
 
 #endif
