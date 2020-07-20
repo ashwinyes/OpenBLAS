@@ -123,13 +123,13 @@ CGEMMOTCOPYOBJ =  cgemm_otcopy$(TSUFFIX).$(SUFFIX)
 
 ZTRMMKERNEL    =  ztrmm_kernel_$(ZGEMM_UNROLL_M)x$(ZGEMM_UNROLL_N).S
 ifneq ($(ZGEMM_UNROLL_M), $(ZGEMM_UNROLL_N))
-ZGEMMINCOPY    =  ../generic/zgemm_ncopy_$(ZGEMM_UNROLL_M).c
-ZGEMMITCOPY    =  ../generic/zgemm_tcopy_$(ZGEMM_UNROLL_M).c
+ZGEMMINCOPY    =  zgemm_ncopy_$(ZGEMM_UNROLL_M)_thunderx2t99.c
+ZGEMMITCOPY    =  zgemm_tcopy_$(ZGEMM_UNROLL_M)_thunderx2t99.c
 ZGEMMINCOPYOBJ =  zgemm_incopy$(TSUFFIX).$(SUFFIX)
 ZGEMMITCOPYOBJ =  zgemm_itcopy$(TSUFFIX).$(SUFFIX)
 endif
-ZGEMMONCOPY    =  ../generic/zgemm_ncopy_$(ZGEMM_UNROLL_N).c
-ZGEMMOTCOPY    =  ../generic/zgemm_tcopy_$(ZGEMM_UNROLL_N).c
+ZGEMMONCOPY    =  zgemm_ncopy_$(ZGEMM_UNROLL_N)_thunderx2t99.c
+ZGEMMOTCOPY    =  zgemm_tcopy_$(ZGEMM_UNROLL_N)_thunderx2t99.c
 ZGEMMONCOPYOBJ =  zgemm_oncopy$(TSUFFIX).$(SUFFIX)
 ZGEMMOTCOPYOBJ =  zgemm_otcopy$(TSUFFIX).$(SUFFIX)
 

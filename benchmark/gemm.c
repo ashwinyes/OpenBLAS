@@ -27,11 +27,11 @@ USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include <stdio.h>
 #include <stdlib.h>
+#include <stdint.h>
 #ifdef __CYGWIN32__
 #include <sys/time.h>
 #endif
 #include "common.h"
-
 
 #undef GEMM
 
@@ -120,7 +120,7 @@ static void *huge_malloc(BLASLONG size){
 
 int main(int argc, char *argv[]){
 
-  FLOAT *a, *b, *c;
+  FLOAT *a, *b, *c, *d;
   FLOAT alpha[] = {1.0, 0.0};
   FLOAT beta [] = {0.0, 0.0};
   char transa = 'N';
@@ -183,6 +183,7 @@ int main(int argc, char *argv[]){
   } else {
     k = to;
   }
+  printf("\n%d  COMSIZE\n", COMPSIZE);
 
   if (( a = (FLOAT *)malloc(sizeof(FLOAT) * m * k * COMPSIZE)) == NULL) {
     fprintf(stderr,"Out of Memory!!\n");exit(1);
@@ -193,19 +194,29 @@ int main(int argc, char *argv[]){
   if (( c = (FLOAT *)malloc(sizeof(FLOAT) * m * n * COMPSIZE)) == NULL) {
     fprintf(stderr,"Out of Memory!!\n");exit(1);
   }
+  if (( d = (FLOAT *)malloc(sizeof(FLOAT) * m * n * COMPSIZE)) == NULL) {
+    fprintf(stderr,"Out of Memory!!\n");exit(1);
+  }
+  if (( d = (FLOAT *)malloc(sizeof(FLOAT) * m * n * COMPSIZE)) == NULL) {
+    fprintf(stderr,"Out of Memory!!\n");exit(1);
+  }
 
 #ifdef linux
   srandom(getpid());
 #endif
 
   for (i = 0; i < m * k * COMPSIZE; i++) {
-    a[i] = ((FLOAT) rand() / (FLOAT) RAND_MAX) - 0.5;
+    //a[i] = ((FLOAT) rand() / (FLOAT) RAND_MAX) - 0.5;
+    a[i] = i + 1;
   }
   for (i = 0; i < k * n * COMPSIZE; i++) {
-    b[i] = ((FLOAT) rand() / (FLOAT) RAND_MAX) - 0.5;
+    //b[i] = ((FLOAT) rand() / (FLOAT) RAND_MAX) - 0.5;
+    b[i] = i + 1;
   }
   for (i = 0; i < m * n * COMPSIZE; i++) {
-    c[i] = ((FLOAT) rand() / (FLOAT) RAND_MAX) - 0.5;
+    //c[i] = ((FLOAT) rand() / (FLOAT) RAND_MAX) - 0.5;
+    c[i] = i + 1;
+    d[i] = c[i];
   }
 
   fprintf(stderr, "          SIZE                   Flops             Time\n");
@@ -230,7 +241,6 @@ int main(int argc, char *argv[]){
     for (j=0; j<loops; j++) {
       GEMM (&transa, &transb, &m, &n, &k, alpha, a, &lda, b, &ldb, beta, c, &ldc);
     }
-
     gettimeofday( &stop, (struct timezone *)0);
     time1 = (double)(stop.tv_sec - start.tv_sec) + (double)((stop.tv_usec - start.tv_usec)) * 1.e-6;
 
@@ -238,7 +248,52 @@ int main(int argc, char *argv[]){
     fprintf(stderr,
 	    " %10.2f MFlops %10.6f sec\n",
 	    COMPSIZE * COMPSIZE * 2. * (double)k * (double)m * (double)n / timeg * 1.e-6, time1);
-    
+    return 0;
+    zgemmnetlib_(&transa, &transb, &m, &n, &k, alpha, a, &lda, b, &ldb, beta, d, &ldc);
+  }
+  int errors = 0;
+  for (i = 0; i < m; i++) {
+    for (j = 0; j < n ; j++) {
+      FLOAT cr = c[i*n*2 + j*2];
+      FLOAT ci = c[i*n*2 + j*2 + 1];
+      FLOAT dr = d[i*n*2 + j*2];
+      FLOAT di = d[i*n*2 + j*2 + 1];
+      uint64_t cr_masked = *(uint64_t *)&cr;
+      uint64_t ci_masked = *(uint64_t *)&ci;
+      uint64_t dr_masked = *(uint64_t *)&dr;
+      uint64_t di_masked = *(uint64_t *)&di;
+      //cr_masked = cr_masked & (~0xfffffffUL);
+      //ci_masked = ci_masked & (~0xfffffffUL);
+      //dr_masked = dr_masked & (~0xfffffffUL);
+      //di_masked = di_masked & (~0xfffffffUL);
+      if (ci_masked != di_masked || cr_masked != dr_masked) {      
+        if (errors++ < 50) {
+		printf("[%04d][%04d] [(%lf %lf) (%lx %lx)] [(%lf %lf) (%lx %lx)] \n",
+			i, j, cr, ci, cr_masked, ci_masked, dr, di, dr_masked, di_masked);
+	}
+      }
+    }
+  }
+  if (errors == 0) printf("CORRECT!!!\n");
+  else {
+    printf("INCORRECT FOR M=%d N=%d K=%d!!!\n\n", m, n, k);
+#if 0
+    for (i = 0; i < m * COMPSIZE; i++) {
+      for (j = 0; j < n * COMPSIZE; j++) {
+        uint64_t c_masked = *(uint64_t *)&c[i*n + j];
+        printf("%6.2lf %016lx", c[i*n + j], c_masked);
+      }
+      printf("\n");
+    }
+    printf("\n");
+    for (i = 0; i < m * COMPSIZE; i++) {
+      for (j = 0; j < n * COMPSIZE; j++) {
+        uint64_t d_masked = *(uint64_t *)&d[i*n + j];
+        printf("%6.2lf %016lx", d[i*n + j], d_masked);
+      }
+      printf("\n");
+    }
+#endif
   }
 
   return 0;

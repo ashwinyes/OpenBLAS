@@ -172,27 +172,26 @@ USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 .endm
 
 .macro KERNEL4x4_I
-	ldr	q8, [pB]
-	ldr	q9, [pB, #16]
+	ldp	q8, q9, [pB]
 	add	pB, pB, #32
-	ld2	{v0.2d, v1.2d}, [pA]
+	ldp	q0, q1, [pA]
 	add	pA, pA, #32
 
 	fmul	v16.2d, v0.2d, v8.d[0]
-	OP_ii	v16.2d, v1.2d, v8.d[1]
+	OP_ii	v16.2d, v1.2d, v9.d[0]
 #if defined(NR) || defined(NC) || defined(TR) || defined(TC) || \
     defined(RR) || defined(RC) || defined(CR) || defined(CC)
 	eor	v17.16b, v17.16b, v17.16b
-	fmls	v17.2d, v0.2d, v8.d[1]
+	fmls	v17.2d, v0.2d, v9.d[0]
 #else
-	fmul	v17.2d, v0.2d, v8.d[1]
+	fmul	v17.2d, v0.2d, v9.d[0]
 #endif
 	OP_ir	v17.2d, v1.2d, v8.d[0]
 
-	ld2	{v2.2d, v3.2d}, [pA]
+	ldp	q2, q3, [pA]
 	add	pA, pA, #32
 
-	fmul	v20.2d, v0.2d, v9.d[0]
+	fmul	v20.2d, v0.2d, v8.d[1]
 	OP_ii	v20.2d, v1.2d, v9.d[1]
 #if defined(NR) || defined(NC) || defined(TR) || defined(TC) || \
     defined(RR) || defined(RC) || defined(CR) || defined(CC)
@@ -201,13 +200,12 @@ USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #else
 	fmul	v21.2d, v0.2d, v9.d[1]
 #endif
-	OP_ir	v21.2d, v1.2d, v9.d[0]
+	OP_ir	v21.2d, v1.2d, v8.d[1]
 
-	ldr	q10, [pB]
-	ldr	q11, [pB, #16]
+	ldp	q10, q11, [pB]
 	add	pB, pB, #32
 
-	fmul	v22.2d, v2.2d, v9.d[0]
+	fmul	v22.2d, v2.2d, v8.d[1]
 	OP_ii	v22.2d, v3.2d, v9.d[1]
 #if defined(NR) || defined(NC) || defined(TR) || defined(TC) || \
     defined(RR) || defined(RC) || defined(CR) || defined(CC)
@@ -216,56 +214,54 @@ USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #else
 	fmul	v23.2d, v2.2d, v9.d[1]
 #endif
-	OP_ir	v23.2d, v3.2d, v9.d[0]
+	OP_ir	v23.2d, v3.2d, v8.d[1]
 
-	ldr	q12, [pB]
-	ldr	q13, [pB, #16]
+	ldp	q12, q13, [pB]
 	add	pB, pB, #32
 
 	fmul	v18.2d, v2.2d, v8.d[0]
-	OP_ii	v18.2d, v3.2d, v8.d[1]
+	OP_ii	v18.2d, v3.2d, v9.d[0]
 #if defined(NR) || defined(NC) || defined(TR) || defined(TC) || \
     defined(RR) || defined(RC) || defined(CR) || defined(CC)
 	eor	v19.16b, v19.16b, v19.16b
-	fmls	v19.2d, v2.2d, v8.d[1]
+	fmls	v19.2d, v2.2d, v9.d[0]
 #else
-	fmul	v19.2d, v2.2d, v8.d[1]
+	fmul	v19.2d, v2.2d, v9.d[0]
 #endif
 	OP_ir	v19.2d, v3.2d, v8.d[0]
 
-	ld2	{v4.2d, v5.2d} , [pA]
+	ldp	q4, q5, [pA]
 	add	pA, pA, #32
 
 	fmul	v24.2d, v0.2d, v10.d[0]
-	OP_ii	v24.2d, v1.2d, v10.d[1]
+	OP_ii	v24.2d, v1.2d, v11.d[0]
 #if defined(NR) || defined(NC) || defined(TR) || defined(TC) || \
     defined(RR) || defined(RC) || defined(CR) || defined(CC)
 	eor	v25.16b, v25.16b, v25.16b
-	fmls	v25.2d, v0.2d, v10.d[1]
+	fmls	v25.2d, v0.2d, v11.d[0]
 #else
-	fmul	v25.2d, v0.2d, v10.d[1]
+	fmul	v25.2d, v0.2d, v11.d[0]
 #endif
 	OP_ir	v25.2d, v1.2d, v10.d[0]
 
-	ld2	{v6.2d, v7.2d} , [pA]
+	ldp	q6, q7, [pA]
 	add	pA, pA, #32
 
 	fmul	v26.2d, v2.2d, v10.d[0]
-	OP_ii	v26.2d, v3.2d, v10.d[1]
+	OP_ii	v26.2d, v3.2d, v11.d[0]
 #if defined(NR) || defined(NC) || defined(TR) || defined(TC) || \
     defined(RR) || defined(RC) || defined(CR) || defined(CC)
 	eor	v27.16b, v27.16b, v27.16b
-	fmls	v27.2d, v2.2d, v10.d[1]
+	fmls	v27.2d, v2.2d, v11.d[0]
 #else
-	fmul	v27.2d, v2.2d, v10.d[1]
+	fmul	v27.2d, v2.2d, v11.d[0]
 #endif
 	OP_ir	v27.2d, v3.2d, v10.d[0]
 
-	ldr	q14, [pB]
-	ldr	q15, [pB, #16]
+	ldp	q14, q15, [pB]
 	add	pB, pB, #32
 
-	fmul	v28.2d, v0.2d, v11.d[0]
+	fmul	v28.2d, v0.2d, v10.d[1]
 	OP_ii	v28.2d, v1.2d, v11.d[1]
 #if defined(NR) || defined(NC) || defined(TR) || defined(TC) || \
     defined(RR) || defined(RC) || defined(CR) || defined(CC)
@@ -274,11 +270,11 @@ USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #else
 	fmul	v29.2d, v0.2d, v11.d[1]
 #endif
-	OP_ir	v29.2d, v1.2d, v11.d[0]
+	OP_ir	v29.2d, v1.2d, v10.d[1]
 
 	prfm	PLDL1KEEP, [pA, #A_PRE_SIZE]
 
-	fmul	v30.2d, v2.2d, v11.d[0]
+	fmul	v30.2d, v2.2d, v10.d[1]
 	OP_ii	v30.2d, v3.2d, v11.d[1]
 #if defined(NR) || defined(NC) || defined(TR) || defined(TC) || \
     defined(RR) || defined(RC) || defined(CR) || defined(CC)
@@ -287,235 +283,229 @@ USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #else
 	fmul	v31.2d, v2.2d, v11.d[1]
 #endif
-	OP_ir	v31.2d, v3.2d, v11.d[0]
+	OP_ir	v31.2d, v3.2d, v10.d[1]
 
 	prfm	PLDL1KEEP, [pA, #A_PRE_SIZE+64]
 .endm
 
 .macro KERNEL4x4_M1
 	OP_rr	v16.2d, v0.2d, v8.d[0]
-	OP_ii	v16.2d, v1.2d, v8.d[1]
-	OP_ri	v17.2d, v0.2d, v8.d[1]
+	OP_ii	v16.2d, v1.2d, v9.d[0]
+	OP_ri	v17.2d, v0.2d, v9.d[0]
 	OP_ir	v17.2d, v1.2d, v8.d[0]
 
-	ldr	q12, [pB]
-	ldr	q13, [pB, #16]
+	ldp	q12, q13, [pB]
 	add	pB, pB, #32
 
 	OP_rr	v18.2d, v2.2d, v8.d[0]
-	OP_ii	v18.2d, v3.2d, v8.d[1]
-	OP_ri	v19.2d, v2.2d, v8.d[1]
+	OP_ii	v18.2d, v3.2d, v9.d[0]
+	OP_ri	v19.2d, v2.2d, v9.d[0]
 	OP_ir	v19.2d, v3.2d, v8.d[0]
 
-	ld2	{v4.2d, v5.2d} , [pA]
+	ldp	q4, q5, [pA]
 	add	pA, pA, #32
 
-	OP_rr	v20.2d, v0.2d, v9.d[0]
+	OP_rr	v20.2d, v0.2d, v8.d[1]
 	OP_ii	v20.2d, v1.2d, v9.d[1]
 	OP_ri	v21.2d, v0.2d, v9.d[1]
-	OP_ir	v21.2d, v1.2d, v9.d[0]
+	OP_ir	v21.2d, v1.2d, v8.d[1]
 
-	ld2	{v6.2d, v7.2d} , [pA]
+	ldp	q6, q7, [pA]
 	add	pA, pA, #32
 
-	OP_rr	v22.2d, v2.2d, v9.d[0]
+	OP_rr	v22.2d, v2.2d, v8.d[1]
 	OP_ii	v22.2d, v3.2d, v9.d[1]
 	OP_ri	v23.2d, v2.2d, v9.d[1]
-	OP_ir	v23.2d, v3.2d, v9.d[0]
+	OP_ir	v23.2d, v3.2d, v8.d[1]
 
-	ldr	q14, [pB]
-	ldr	q15, [pB, #16]
+	ldp	q14, q15, [pB]
 	add	pB, pB, #32
 
 	OP_rr	v24.2d, v0.2d, v10.d[0]
-	OP_ii	v24.2d, v1.2d, v10.d[1]
-	OP_ri	v25.2d, v0.2d, v10.d[1]
+	OP_ii	v24.2d, v1.2d, v11.d[0]
+	OP_ri	v25.2d, v0.2d, v11.d[0]
 	OP_ir	v25.2d, v1.2d, v10.d[0]
 
 	prfm	PLDL1KEEP, [pA, #A_PRE_SIZE]
 
 	OP_rr	v26.2d, v2.2d, v10.d[0]
-	OP_ii	v26.2d, v3.2d, v10.d[1]
-	OP_ri	v27.2d, v2.2d, v10.d[1]
+	OP_ii	v26.2d, v3.2d, v11.d[0]
+	OP_ri	v27.2d, v2.2d, v11.d[0]
 	OP_ir	v27.2d, v3.2d, v10.d[0]
 
 	prfm	PLDL1KEEP, [pA, #A_PRE_SIZE+64]
 
-	OP_rr	v28.2d, v0.2d, v11.d[0]
+	OP_rr	v28.2d, v0.2d, v10.d[1]
 	OP_ii	v28.2d, v1.2d, v11.d[1]
 	OP_ri	v29.2d, v0.2d, v11.d[1]
-	OP_ir	v29.2d, v1.2d, v11.d[0]
+	OP_ir	v29.2d, v1.2d, v10.d[1]
 
-	OP_rr	v30.2d, v2.2d, v11.d[0]
+	OP_rr	v30.2d, v2.2d, v10.d[1]
 	OP_ii	v30.2d, v3.2d, v11.d[1]
 	OP_ri	v31.2d, v2.2d, v11.d[1]
-	OP_ir	v31.2d, v3.2d, v11.d[0]
+	OP_ir	v31.2d, v3.2d, v10.d[1]
 .endm
 
 .macro KERNEL4x4_M2
 	OP_rr	v16.2d, v4.2d, v12.d[0]
-	OP_ii	v16.2d, v5.2d, v12.d[1]
-	OP_ri	v17.2d, v4.2d, v12.d[1]
+	OP_ii	v16.2d, v5.2d, v13.d[0]
+	OP_ri	v17.2d, v4.2d, v13.d[0]
 	OP_ir	v17.2d, v5.2d, v12.d[0]
 
-	ldr	q8, [pB]
-	ldr	q9, [pB, #16]
+	ldp	q8, q9, [pB]
 	add	pB, pB, #32
 
 	OP_rr	v18.2d, v6.2d, v12.d[0]
-	OP_ii	v18.2d, v7.2d, v12.d[1]
-	OP_ri	v19.2d, v6.2d, v12.d[1]
+	OP_ii	v18.2d, v7.2d, v13.d[0]
+	OP_ri	v19.2d, v6.2d, v13.d[0]
 	OP_ir	v19.2d, v7.2d, v12.d[0]
 
-	ld2	{v0.2d, v1.2d}, [pA]
+	ldp	q0, q1, [pA]
 	add	pA, pA, #32
 
-	OP_rr	v20.2d, v4.2d, v13.d[0]
+	OP_rr	v20.2d, v4.2d, v12.d[1]
 	OP_ii	v20.2d, v5.2d, v13.d[1]
 	OP_ri	v21.2d, v4.2d, v13.d[1]
-	OP_ir	v21.2d, v5.2d, v13.d[0]
+	OP_ir	v21.2d, v5.2d, v12.d[1]
 
-	ld2	{v2.2d, v3.2d}, [pA]
+	ldp	q2, q3, [pA]
 	add	pA, pA, #32
 
-	OP_rr	v22.2d, v6.2d, v13.d[0]
+	OP_rr	v22.2d, v6.2d, v12.d[1]
 	OP_ii	v22.2d, v7.2d, v13.d[1]
 	OP_ri	v23.2d, v6.2d, v13.d[1]
-	OP_ir	v23.2d, v7.2d, v13.d[0]
+	OP_ir	v23.2d, v7.2d, v12.d[1]
 
-	ldr	q10, [pB]
-	ldr	q11, [pB, #16]
+	ldp	q10, q11, [pB]
 	add	pB, pB, #32
 
 	OP_rr	v24.2d, v4.2d, v14.d[0]
-	OP_ii	v24.2d, v5.2d, v14.d[1]
-	OP_ri	v25.2d, v4.2d, v14.d[1]
+	OP_ii	v24.2d, v5.2d, v15.d[0]
+	OP_ri	v25.2d, v4.2d, v15.d[0]
 	OP_ir	v25.2d, v5.2d, v14.d[0]
 
 	prfm	PLDL1KEEP, [pB, #B_PRE_SIZE]
 
 	OP_rr	v26.2d, v6.2d, v14.d[0]
-	OP_ii	v26.2d, v7.2d, v14.d[1]
-	OP_ri	v27.2d, v6.2d, v14.d[1]
+	OP_ii	v26.2d, v7.2d, v15.d[0]
+	OP_ri	v27.2d, v6.2d, v15.d[0]
 	OP_ir	v27.2d, v7.2d, v14.d[0]
 
 	prfm	PLDL1KEEP, [pB, #B_PRE_SIZE+64]
 
-	OP_rr	v28.2d, v4.2d, v15.d[0]
+	OP_rr	v28.2d, v4.2d, v14.d[1]
 	OP_ii	v28.2d, v5.2d, v15.d[1]
 	OP_ri	v29.2d, v4.2d, v15.d[1]
-	OP_ir	v29.2d, v5.2d, v15.d[0]
+	OP_ir	v29.2d, v5.2d, v14.d[1]
 
-	OP_rr	v30.2d, v6.2d, v15.d[0]
+	OP_rr	v30.2d, v6.2d, v14.d[1]
 	OP_ii	v30.2d, v7.2d, v15.d[1]
 	OP_ri	v31.2d, v6.2d, v15.d[1]
-	OP_ir	v31.2d, v7.2d, v15.d[0]
+	OP_ir	v31.2d, v7.2d, v14.d[1]
 .endm
 
 .macro KERNEL4x4_E
 	OP_rr	v16.2d, v4.2d, v12.d[0]
-	OP_ii	v16.2d, v5.2d, v12.d[1]
-	OP_ri	v17.2d, v4.2d, v12.d[1]
+	OP_ii	v16.2d, v5.2d, v13.d[0]
+	OP_ri	v17.2d, v4.2d, v13.d[0]
 	OP_ir	v17.2d, v5.2d, v12.d[0]
 
 	OP_rr	v18.2d, v6.2d, v12.d[0]
-	OP_ii	v18.2d, v7.2d, v12.d[1]
-	OP_ri	v19.2d, v6.2d, v12.d[1]
+	OP_ii	v18.2d, v7.2d, v13.d[0]
+	OP_ri	v19.2d, v6.2d, v13.d[0]
 	OP_ir	v19.2d, v7.2d, v12.d[0]
 
-	OP_rr	v20.2d, v4.2d, v13.d[0]
+	OP_rr	v20.2d, v4.2d, v12.d[1]
 	OP_ii	v20.2d, v5.2d, v13.d[1]
 	OP_ri	v21.2d, v4.2d, v13.d[1]
-	OP_ir	v21.2d, v5.2d, v13.d[0]
+	OP_ir	v21.2d, v5.2d, v12.d[1]
 
 	prfm	PLDL1KEEP, [pB, #B_PRE_SIZE]
 
-	OP_rr	v22.2d, v6.2d, v13.d[0]
+	OP_rr	v22.2d, v6.2d, v12.d[1]
 	OP_ii	v22.2d, v7.2d, v13.d[1]
 	OP_ri	v23.2d, v6.2d, v13.d[1]
-	OP_ir	v23.2d, v7.2d, v13.d[0]
+	OP_ir	v23.2d, v7.2d, v12.d[1]
 
 	OP_rr	v24.2d, v4.2d, v14.d[0]
-	OP_ii	v24.2d, v5.2d, v14.d[1]
-	OP_ri	v25.2d, v4.2d, v14.d[1]
+	OP_ii	v24.2d, v5.2d, v15.d[0]
+	OP_ri	v25.2d, v4.2d, v15.d[0]
 	OP_ir	v25.2d, v5.2d, v14.d[0]
 
 	prfm	PLDL1KEEP, [pB, #B_PRE_SIZE+64]
 
 	OP_rr	v26.2d, v6.2d, v14.d[0]
-	OP_ii	v26.2d, v7.2d, v14.d[1]
-	OP_ri	v27.2d, v6.2d, v14.d[1]
+	OP_ii	v26.2d, v7.2d, v15.d[0]
+	OP_ri	v27.2d, v6.2d, v15.d[0]
 	OP_ir	v27.2d, v7.2d, v14.d[0]
 
-	OP_rr	v28.2d, v4.2d, v15.d[0]
+	OP_rr	v28.2d, v4.2d, v14.d[1]
 	OP_ii	v28.2d, v5.2d, v15.d[1]
 	OP_ri	v29.2d, v4.2d, v15.d[1]
-	OP_ir	v29.2d, v5.2d, v15.d[0]
+	OP_ir	v29.2d, v5.2d, v14.d[1]
 
-	OP_rr	v30.2d, v6.2d, v15.d[0]
+	OP_rr	v30.2d, v6.2d, v14.d[1]
 	OP_ii	v30.2d, v7.2d, v15.d[1]
 	OP_ri	v31.2d, v6.2d, v15.d[1]
-	OP_ir	v31.2d, v7.2d, v15.d[0]
+	OP_ir	v31.2d, v7.2d, v14.d[1]
 .endm
 
 .macro KERNEL4x4_SUB
-	ldr	q8, [pB]
-	ldr	q9, [pB, #16]
+	ldp	q8, q9, [pB]
 	add	pB, pB, #32
 
-	ld2	{v0.2d, v1.2d}, [pA]
+	ldp	q0, q1, [pA]
 	add	pA, pA, #32
 
 	OP_rr	v16.2d, v0.2d, v8.d[0]
-	OP_ii	v16.2d, v1.2d, v8.d[1]
-	OP_ri	v17.2d, v0.2d, v8.d[1]
+	OP_ii	v16.2d, v1.2d, v9.d[0]
+	OP_ri	v17.2d, v0.2d, v9.d[0]
 	OP_ir	v17.2d, v1.2d, v8.d[0]
 
-	ld2	{v2.2d, v3.2d}, [pA]
+	ldp	q2, q3, [pA]
 	add	pA, pA, #32
 
-	OP_rr	v20.2d, v0.2d, v9.d[0]
+	OP_rr	v20.2d, v0.2d, v8.d[1]
 	OP_ii	v20.2d, v1.2d, v9.d[1]
 	OP_ri	v21.2d, v0.2d, v9.d[1]
-	OP_ir	v21.2d, v1.2d, v9.d[0]
+	OP_ir	v21.2d, v1.2d, v8.d[1]
 
-	ldr	q10, [pB]
-	ldr	q11, [pB, #16]
+	ldp	q10, q11, [pB]
 	add	pB, pB, #32
 
 	OP_rr	v18.2d, v2.2d, v8.d[0]
-	OP_ii	v18.2d, v3.2d, v8.d[1]
-	OP_ri	v19.2d, v2.2d, v8.d[1]
+	OP_ii	v18.2d, v3.2d, v9.d[0]
+	OP_ri	v19.2d, v2.2d, v9.d[0]
 	OP_ir	v19.2d, v3.2d, v8.d[0]
 
 	prfm	PLDL1KEEP, [pB, #B_PRE_SIZE]
 
-	OP_rr	v22.2d, v2.2d, v9.d[0]
+	OP_rr	v22.2d, v2.2d, v8.d[1]
 	OP_ii	v22.2d, v3.2d, v9.d[1]
 	OP_ri	v23.2d, v2.2d, v9.d[1]
-	OP_ir	v23.2d, v3.2d, v9.d[0]
+	OP_ir	v23.2d, v3.2d, v8.d[1]
 
 	prfm	PLDL1KEEP, [pA, #A_PRE_SIZE]
 
 	OP_rr	v24.2d, v0.2d, v10.d[0]
-	OP_ii	v24.2d, v1.2d, v10.d[1]
-	OP_ri	v25.2d, v0.2d, v10.d[1]
+	OP_ii	v24.2d, v1.2d, v11.d[0]
+	OP_ri	v25.2d, v0.2d, v11.d[0]
 	OP_ir	v25.2d, v1.2d, v10.d[0]
 
 	OP_rr	v26.2d, v2.2d, v10.d[0]
-	OP_ii	v26.2d, v3.2d, v10.d[1]
-	OP_ri	v27.2d, v2.2d, v10.d[1]
+	OP_ii	v26.2d, v3.2d, v11.d[0]
+	OP_ri	v27.2d, v2.2d, v11.d[0]
 	OP_ir	v27.2d, v3.2d, v10.d[0]
 
-	OP_rr	v28.2d, v0.2d, v11.d[0]
+	OP_rr	v28.2d, v0.2d, v10.d[1]
 	OP_ii	v28.2d, v1.2d, v11.d[1]
 	OP_ri	v29.2d, v0.2d, v11.d[1]
-	OP_ir	v29.2d, v1.2d, v11.d[0]
+	OP_ir	v29.2d, v1.2d, v10.d[1]
 
-	OP_rr	v30.2d, v2.2d, v11.d[0]
+	OP_rr	v30.2d, v2.2d, v10.d[1]
 	OP_ii	v30.2d, v3.2d, v11.d[1]
 	OP_ri	v31.2d, v2.2d, v11.d[1]
-	OP_ir	v31.2d, v3.2d, v11.d[0]
+	OP_ir	v31.2d, v3.2d, v10.d[1]
 .endm
 
 .macro SAVE4x4
@@ -614,12 +604,12 @@ USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 .endm
 
 .macro KERNEL2x4_SUB
-	ld2	{v8.2d, v9.2d}, [pB]
+	ldp	q8, q9, [pB]
 	add	pB, pB, #32
-	ld2	{v10.2d, v11.2d}, [pB]
+	ldp	q10, q11, [pB]
 	add	pB, pB, #32
 
-	ld2	{v0.2d, v1.2d}, [pA]
+	ldp	q0, q1, [pA]
 	add	pA, pA, #32
 
 	OP_rr	v16.2d, v0.2d, v8.d[0]
@@ -700,11 +690,11 @@ USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 .endm
 
 .macro KERNEL1x4_SUB
-	ld2	{v8.2d, v9.2d}, [pB]
+	ldp	q8, q9, [pB]
 	add	pB, pB, #32
-	ld2	{v10.2d, v11.2d}, [pB]
+	ldp	q10, q11, [pB]
 	add	pB, pB, #32
-	ld2	{v0.d, v1.d}[0], [pA]
+	ldp	d0, d1, [pA]
 	add	pA, pA, #16
 
 	OP_rr	d16, d0, v8.d[0]
@@ -785,11 +775,11 @@ USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 .endm
 
 .macro KERNEL4x2_SUB
-	ld2	{v8.2d, v9.2d}, [pB]
+	ldp	q8, q9, [pB]
 	add	pB, pB, #32
-	ld2	{v0.2d, v1.2d}, [pA]
+	ldp	q0, q1, [pA]
 	add	pA, pA, #32
-	ld2	{v2.2d, v3.2d}, [pA]
+	ldp	q2, q3, [pA]
 	add	pA, pA, #32
 
 	OP_rr	v16.2d, v0.2d, v8.d[0]
@@ -862,9 +852,9 @@ USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 .endm
 
 .macro KERNEL2x2_SUB
-	ld2	{v8.2d, v9.2d}, [pB]
+	ldp	q8, q9, [pB]
 	add	pB, pB, #32
-	ld2	{v0.2d, v1.2d}, [pA]
+	ldp	q0, q1, [pA]
 	add	pA, pA, #32
 
 	OP_rr	v16.2d, v0.2d, v8.d[0]
@@ -913,9 +903,9 @@ USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 .endm
 
 .macro KERNEL1x2_SUB
-	ld2	{v8.2d, v9.2d}, [pB]
+	ldp	q8, q9, [pB]
 	add	pB, pB, #32
-	ld2	{v0.d, v1.d}[0], [pA]
+	ldp	d0, d1, [pA]
 	add	pA, pA, #16
 
 	OP_rr	d16, d0, v8.d[0]
@@ -964,21 +954,21 @@ USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 .endm
 
 .macro KERNEL4x1_SUB
-	ld2	{v8.d, v9.d}[0], [pB]
+	ldr	q8, [pB]
 	add	pB, pB, #16
-	ld2	{v0.2d, v1.2d}, [pA]
+	ldp	q0, q1, [pA]
 	add	pA, pA, #32
-	ld2	{v2.2d, v3.2d}, [pA]
+	ldp	q2, q3, [pA]
 	add	pA, pA, #32
 
 	OP_rr	v16.2d, v0.2d, v8.d[0]
-	OP_ii	v16.2d, v1.2d, v9.d[0]
-	OP_ri	v17.2d, v0.2d, v9.d[0]
+	OP_ii	v16.2d, v1.2d, v8.d[1]
+	OP_ri	v17.2d, v0.2d, v8.d[1]
 	OP_ir	v17.2d, v1.2d, v8.d[0]
 
 	OP_rr	v18.2d, v2.2d, v8.d[0]
-	OP_ii	v18.2d, v3.2d, v9.d[0]
-	OP_ri	v19.2d, v2.2d, v9.d[0]
+	OP_ii	v18.2d, v3.2d, v8.d[1]
+	OP_ri	v19.2d, v2.2d, v8.d[1]
 	OP_ir	v19.2d, v3.2d, v8.d[0]
 .endm
 
@@ -1013,14 +1003,14 @@ USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 .endm
 
 .macro KERNEL2x1_SUB
-	ld2	{v8.d, v9.d}[0], [pB]
+	ldr	q8, [pB]
 	add	pB, pB, #16
-	ld2	{v0.2d, v1.2d}, [pA]
+	ldp	q0, q1, [pA]
 	add	pA, pA, #32
 
 	OP_rr	v16.2d, v0.2d, v8.d[0]
-	OP_ii	v16.2d, v1.2d, v9.d[0]
-	OP_ri	v17.2d, v0.2d, v9.d[0]
+	OP_ii	v16.2d, v1.2d, v8.d[1]
+	OP_ri	v17.2d, v0.2d, v8.d[1]
 	OP_ir	v17.2d, v1.2d, v8.d[0]
 .endm
 
@@ -1049,14 +1039,14 @@ USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 .endm
 
 .macro KERNEL1x1_SUB
-	ld2	{v8.d, v9.d}[0], [pB]
+	ldr	q8, [pB]
 	add	pB, pB, #16
-	ld2	{v0.d, v1.d}[0], [pA]
+	ldp	d0, d1, [pA]
 	add	pA, pA, #16
 
 	OP_rr	d16, d0, v8.d[0]
-	OP_ii	d16, d1, v9.d[0]
-	OP_ri	d17, d0, v9.d[0]
+	OP_ii	d16, d1, v8.d[1]
+	OP_ri	d17, d0, v8.d[1]
 	OP_ir	d17, d1, v8.d[0]
 .endm
 

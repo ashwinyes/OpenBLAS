@@ -490,7 +490,11 @@ sgemm.essl : sgemm.$(SUFFIX)
 
 ##################################### Dgemm ####################################################
 dgemm.goto : dgemm.$(SUFFIX) ../$(LIBNAME)
-	$(CC) $(CFLAGS) -o $(@F) $^ $(CEXTRALIB) $(EXTRALIB) $(FEXTRALIB) -lm
+	gfortran -O2 -frecursive -ffixed-line-length-132 -c -o dgemm_netlib.o dgemm.f
+	$(CC) $(CFLAGS) dgemm_netlib.o -o $(@F) $^ $(CEXTRALIB) $(EXTRALIB) $(FEXTRALIB) -lm 
+
+dgemm.trace : ../$(LIBNAME)
+	$(CC) $(CFLAGS) -static -o $(@F) dgemm_trace.c -I/workspace/ashwin/work/openblas $^ $(CEXTRALIB) $(EXTRALIB) $(FEXTRALIB) -lm 
 
 dgemm.acml : dgemm.$(SUFFIX)
 	-$(CC) $(CFLAGS) -o $(@F) $^ $(LIBACML) $(CEXTRALIB) $(EXTRALIB) $(FEXTRALIB)
@@ -530,7 +534,8 @@ cgemm.essl : cgemm.$(SUFFIX)
 ##################################### Zgemm ####################################################
 
 zgemm.goto : zgemm.$(SUFFIX) ../$(LIBNAME)
-	$(CC) $(CFLAGS) -o $(@F) $^ $(CEXTRALIB) $(EXTRALIB) $(FEXTRALIB) -lm
+	gfortran -O2 -frecursive -ffixed-line-length-132 -c -o zgemm_netlib.o zgemm.f
+	$(CC) $(CFLAGS) zgemm_netlib.o -o $(@F) $^ $(CEXTRALIB) $(EXTRALIB) $(FEXTRALIB) -lm 
 
 zgemm.acml : zgemm.$(SUFFIX)
 	-$(CC) $(CFLAGS) -o $(@F) $^ $(LIBACML) $(CEXTRALIB) $(EXTRALIB) $(FEXTRALIB)
