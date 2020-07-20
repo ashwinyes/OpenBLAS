@@ -35,6 +35,7 @@
 /* interpreted as representing official policies, either expressed   */
 /* or implied, of The University of Texas at Austin.                 */
 /*********************************************************************/
+#define PRINTF(...)
 
 #ifndef CACHE_LINE_SIZE
 #define CACHE_LINE_SIZE 8
@@ -117,18 +118,26 @@ typedef struct {
 #ifndef ICOPY_OPERATION
 #if defined(NN) || defined(NT) || defined(NC) || defined(NR) || \
   defined(RN) || defined(RT) || defined(RC) || defined(RR)
-#define ICOPY_OPERATION(M, N, A, LDA, X, Y, BUFFER) GEMM_ITCOPY(M, N, (IFLOAT *)(A) + ((Y) + (X) * (LDA)) * COMPSIZE, LDA, BUFFER);
+#define ICOPY_OPERATION(M, N, A, LDA, X, Y, BUFFER) \
+	PRINTF("%ld,%ld ICOPY\n", M, N);\
+	GEMM_ITCOPY(M, N, (IFLOAT *)(A) + ((Y) + (X) * (LDA)) * COMPSIZE, LDA, BUFFER);
 #else
-#define ICOPY_OPERATION(M, N, A, LDA, X, Y, BUFFER) GEMM_INCOPY(M, N, (IFLOAT *)(A) + ((X) + (Y) * (LDA)) * COMPSIZE, LDA, BUFFER);
+#define ICOPY_OPERATION(M, N, A, LDA, X, Y, BUFFER) \
+	PRINTF("%ld,%ld ICOPY\n", M, N);\
+	GEMM_INCOPY(M, N, (IFLOAT *)(A) + ((X) + (Y) * (LDA)) * COMPSIZE, LDA, BUFFER);
 #endif
 #endif
 
 #ifndef OCOPY_OPERATION
 #if defined(NN) || defined(TN) || defined(CN) || defined(RN) || \
   defined(NR) || defined(TR) || defined(CR) || defined(RR)
-#define OCOPY_OPERATION(M, N, A, LDA, X, Y, BUFFER) GEMM_ONCOPY(M, N, (IFLOAT *)(A) + ((X) + (Y) * (LDA)) * COMPSIZE, LDA, BUFFER);
+#define OCOPY_OPERATION(M, N, A, LDA, X, Y, BUFFER) \
+	PRINTF("%ld,%ld OCOPY\n", M, N);\
+	GEMM_ONCOPY(M, N, (IFLOAT *)(A) + ((X) + (Y) * (LDA)) * COMPSIZE, LDA, BUFFER);
 #else
-#define OCOPY_OPERATION(M, N, A, LDA, X, Y, BUFFER) GEMM_OTCOPY(M, N, (IFLOAT *)(A) + ((Y) + (X) * (LDA)) * COMPSIZE, LDA, BUFFER);
+#define OCOPY_OPERATION(M, N, A, LDA, X, Y, BUFFER) \
+	PRINTF("%ld,%ld OCOPY\n", M, N);\
+	GEMM_OTCOPY(M, N, (IFLOAT *)(A) + ((Y) + (X) * (LDA)) * COMPSIZE, LDA, BUFFER);
 #endif
 #endif
 
@@ -153,6 +162,7 @@ typedef struct {
   KERNEL_FUNC(M, N, K, ALPHA[0], SA, SB, (FLOAT *)(C) + ((X) + (Y) * LDC) * COMPSIZE, LDC)
 #else
 #define KERNEL_OPERATION(M, N, K, ALPHA, SA, SB, C, LDC, X, Y)          \
+  PRINTF("%ld,%ld,%ld KERNEL\n", M, N, K);\
   KERNEL_FUNC(M, N, K, ALPHA[0], ALPHA[1], SA, SB, (FLOAT *)(C) + ((X) + (Y) * LDC) * COMPSIZE, LDC)
 #endif
 #endif

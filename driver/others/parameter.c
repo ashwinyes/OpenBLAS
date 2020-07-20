@@ -747,8 +747,23 @@ void blas_set_parameter(void){
 
 #if defined(ARCH_ARM64)
 
+long int pref_a_size = 3584;
+long int pref_b_size = 512;
+long int pref_c_size = 128;
+
 void blas_set_parameter(void)
 {
+  env_var_t e;
+  dgemm_p = 160;
+  dgemm_q = 128;
+  dgemm_r = 4096;
+
+  if (readenv(e, "OPENBLAS_PARAM_P")) dgemm_p = atoi(e);
+  if (readenv(e, "OPENBLAS_PARAM_Q")) dgemm_q = atoi(e);
+  if (readenv(e, "OPENBLAS_PARAM_R")) dgemm_r = atoi(e);
+  if (readenv(e, "OPENBLAS_PREF_A")) pref_a_size = atoi(e);
+  if (readenv(e, "OPENBLAS_PREF_B")) pref_b_size = atoi(e);
+  if (readenv(e, "OPENBLAS_PREF_C")) pref_c_size = atoi(e);
 }
 
 #endif

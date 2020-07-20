@@ -124,12 +124,14 @@ int main(int argc, char *argv[]){
 
   IFLOAT *a, *b;
   FLOAT *c;
-  FLOAT alpha[] = {1.0, 0.0};
-  FLOAT beta [] = {0.0, 0.0};
+  FLOAT alpha[] = {1.5, 0.5};
+  FLOAT beta [] = {3.5, 2.5};
   char transa = 'N';
   char transb = 'N';
   blasint m, n, k, i, j, lda, ldb, ldc;
   int loops = 1;
+  int init_type = 0;
+  int result_debug = 0;
   int has_param_m = 0;
   int has_param_n = 0;
   int has_param_k = 0;
@@ -141,6 +143,7 @@ int main(int argc, char *argv[]){
 
   struct timeval start, stop;
   double time1, timeg;
+  struct drand48_data drand_buf;
 
   argc--;argv++;
 
@@ -160,6 +163,20 @@ int main(int argc, char *argv[]){
   }
   TOUPPER(transa);
   TOUPPER(transb);
+  if ((p = getenv("OPENBLAS_INIT_TYPE"))) {
+    init_type = atoi(p);
+  }
+  if ((p = getenv("OPENBLAS_DEBUG"))) {
+    result_debug = atoi(p);
+  }
+  if ((p = getenv("OPENBLAS_ALPHA"))) {
+    alpha[0] = atoi(p);
+    alpha[1] = alpha[0];
+  }
+  if ((p = getenv("OPENBLAS_BETA"))) {
+    beta[0] = atoi(p);
+    beta[1] = beta[0];
+  }
 
   fprintf(stderr, "From : %3d  To : %3d Step=%d : Transa=%c : Transb=%c\n", from, to, step, transa, transb);
 
@@ -187,28 +204,88 @@ int main(int argc, char *argv[]){
     k = to;
   }
 
-  if (( a = (IFLOAT *)malloc(sizeof(IFLOAT) * m * k * COMPSIZE)) == NULL) {
+  BLASLONG maxdim = (m > k) ? ((m > n) ? m : n) : ((k > n) ? k : n);
+  if (( a = (IFLOAT *)malloc(sizeof(IFLOAT) * maxdim * maxdim * COMPSIZE)) == NULL) {
     fprintf(stderr,"Out of Memory!!\n");exit(1);
   }
-  if (( b = (IFLOAT *)malloc(sizeof(IFLOAT) * k * n * COMPSIZE)) == NULL) {
+  if (( b = (IFLOAT *)malloc(sizeof(IFLOAT) * maxdim * maxdim * COMPSIZE)) == NULL) {
     fprintf(stderr,"Out of Memory!!\n");exit(1);
   }
-  if (( c = (FLOAT *)malloc(sizeof(FLOAT) * m * n * COMPSIZE)) == NULL) {
+  if (( c = (FLOAT *)malloc(sizeof(FLOAT) * maxdim * maxdim * COMPSIZE)) == NULL) {
     fprintf(stderr,"Out of Memory!!\n");exit(1);
   }
 
+  if (init_type == 0) {
+    /* Initialize with random value serially */
 #ifdef linux
-  srandom(getpid());
+    srandom(getpid());
 #endif
 
-  for (i = 0; i < m * k * COMPSIZE; i++) {
-    a[i] = ((IFLOAT) rand() / (IFLOAT) RAND_MAX) - 0.5;
-  }
-  for (i = 0; i < k * n * COMPSIZE; i++) {
-    b[i] = ((IFLOAT) rand() / (IFLOAT) RAND_MAX) - 0.5;
-  }
-  for (i = 0; i < m * n * COMPSIZE; i++) {
-    c[i] = ((FLOAT) rand() / (FLOAT) RAND_MAX) - 0.5;
+    for (i = 0; i < m * k * COMPSIZE; i++)
+      a[i] = ((IFLOAT) rand() / (IFLOAT) RAND_MAX) - 0.5;
+    for (i = 0; i < m * k * COMPSIZE; i++)
+      b[i] = ((IFLOAT) rand() / (IFLOAT) RAND_MAX) - 0.5;
+    for (i = 0; i < m * k * COMPSIZE; i++)
+      c[i] = ((IFLOAT) rand() / (IFLOAT) RAND_MAX) - 0.5;
+
+  } else if (init_type == 1) {
+#pragma omp parallel private(drand_buf)
+    {
+      /* Initialize with random value in parallel */
+      srand48_r(time(NULL) + omp_get_thread_num(), &drand_buf);
+#pragma omp for
+      for (i = 0; i < m * k * COMPSIZE; i++) {
+        long int random_int;
+        lrand48_r(&drand_buf, &random_int);
+        a[i] = ((IFLOAT) random_int / (IFLOAT) RAND_MAX) - 0.5;
+      }
+#pragma omp for
+      for (i = 0; i < k * n * COMPSIZE; i++) {
+        long int random_int;
+        lrand48_r(&drand_buf, &random_int);
+        b[i] = ((IFLOAT) random_int / (IFLOAT) RAND_MAX) - 0.5;
+      }
+#pragma omp for
+      for (i = 0; i < m * n * COMPSIZE; i++) {
+        long int random_int;
+        lrand48_r(&drand_buf, &random_int);
+        c[i] = ((IFLOAT) random_int / (IFLOAT) RAND_MAX) - 0.5;
+      }
+    }
+  } else if (init_type == 2) {
+    /* Initialize with constant value in parallel */
+#pragma omp parallel
+    {
+#pragma omp for
+      for (i = 0; i < m * k * COMPSIZE; i++) {
+        a[i] = ((IFLOAT) 1.0 / (IFLOAT) RAND_MAX) - 0.5;
+      }
+#pragma omp for
+      for (i = 0; i < k * n * COMPSIZE; i++) {
+        b[i] = ((IFLOAT) 1.0 / (IFLOAT) RAND_MAX) - 0.5;
+      }
+#pragma omp for
+      for (i = 0; i < m * n * COMPSIZE; i++) {
+        c[i] = ((IFLOAT) 1.0 / (IFLOAT) RAND_MAX) - 0.5;
+      }
+    }
+  } else if (init_type == 3) {
+    /* Initialize with constant value in parallel */
+#pragma omp parallel
+    {
+#pragma omp for
+      for (i = 0; i < m * k * COMPSIZE; i++) {
+        a[i] = i % 1024 + 1;
+      }
+#pragma omp for
+      for (i = 0; i < k * n * COMPSIZE; i++) {
+        b[i] = i % 1024 + 1;
+      }
+#pragma omp for
+      for (i = 0; i < m * n * COMPSIZE; i++) {
+        c[i] = i % 1024 + 1;
+      }
+    }
   }
 
   fprintf(stderr, "          SIZE                   Flops             Time\n");
@@ -227,7 +304,7 @@ int main(int argc, char *argv[]){
     else { ldb = n; }
     ldc = m;
 
-    fprintf(stderr, " M=%4d, N=%4d, K=%4d : ", (int)m, (int)n, (int)k);
+    fprintf(stderr, " M=%4d, N=%4d, K=%4d : \n", (int)m, (int)n, (int)k);
     gettimeofday( &start, (struct timezone *)0);
 
     for (j=0; j<loops; j++) {
@@ -241,10 +318,24 @@ int main(int argc, char *argv[]){
     fprintf(stderr,
 	    " %10.2f MFlops %10.6f sec\n",
 	    COMPSIZE * COMPSIZE * 2. * (double)k * (double)m * (double)n / timeg * 1.e-6, time1);
-    
+    if (result_debug) print_matrix(c, m, n); 
   }
 
   return 0;
+}
+
+
+void print_matrix(double *A, long int m, long int n)
+{
+  long int i, j;
+
+  for (i = 0; i < m; i++) {
+    for (j = 0; j < n; j++) {
+      fprintf(stderr, "%0lx(%5.2lf) ", *(long int *)(A + i * m + j), *(A + i * m + j));
+      //fprintf(stderr, "%lf ", *(A + i * m + j));
+    }
+    fprintf(stderr, "\n");
+  }
 }
 
 // void main(int argc, char *argv[]) __attribute__((weak, alias("MAIN__")));
